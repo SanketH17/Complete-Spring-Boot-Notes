@@ -1085,22 +1085,29 @@ This is useful context for interviews, even though these notes focus on Spring C
 
 ---
 
-<a id="quick-interview-revision"></a>
 # Spring Core — Quick Interview Revision
 
-<a id="top-concepts"></a>
 ## Top Concepts
 
-1. **IoC and DI** — Spring creates and wires objects instead of application code doing it everywhere.
-2. **ApplicationContext** — the main, feature-rich Spring container.
-3. **Beans** — objects managed by Spring.
-4. **Constructor injection** — preferred for required dependencies.
-5. **Component stereotypes** — use `@Service`, `@Repository`, and controllers to express architecture.
-6. **Bean lifecycle and scopes** — know default singleton behavior and lifecycle callbacks.
-7. **`@Configuration` / `@Bean`** — explicit bean registration, especially for third-party objects.
-8. **`@Primary` / `@Qualifier`** — resolve multiple implementations.
-9. **Profiles and external configuration** — run the same build safely across environments.
-10. **`@ConfigurationProperties`** — typed, grouped configuration binding.
+1. **IoC & DI** — Spring creates objects and gives them their dependencies.
+
+2. **ApplicationContext** — The main Spring container that manages beans.
+
+3. **Beans** — Objects managed by Spring.
+
+4. **Constructor Injection** — The preferred way to give dependencies to a class.
+
+5. **`@Service`, `@Repository`, `@Controller`** — Used to mark different types of application classes.
+
+6. **Bean Lifecycle & Scopes** — Know how beans are created, managed, and how long they live.
+
+7. **`@Configuration` / `@Bean`** — Used when we want to define a bean manually.
+
+8. **`@Primary` / `@Qualifier`** — Used when there are multiple beans of the same type.
+
+9. **Profiles & External Configuration** — Used to keep different configurations for different environments like Dev and Prod.
+
+10. **`@ConfigurationProperties`** — Used to load related configuration values into a Java class.
 
 <a id="top-interview-questions"></a>
 ## Top Interview Questions
