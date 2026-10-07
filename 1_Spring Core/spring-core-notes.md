@@ -774,6 +774,7 @@ application-prod.yml   # production overrides
 
 `dev` → Dev configuration  
 `prod` → Prod configuration
+
 ---
 
 <a id="application-properties-and-yml"></a>
