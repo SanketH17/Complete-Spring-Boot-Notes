@@ -766,10 +766,14 @@ application-prod.yml   # production overrides
 
 ### 🎯 Interview Questions
 
-**Q: How do you keep dev and prod configuration different?**
+### Q: How do you keep dev and prod configuration different?
 
-> I use profile-specific configuration files and, when needed, `@Profile` beans. The deployment environment activates the appropriate profile, while secrets come from external secure configuration rather than the repository.
+> I use **different profiles** for dev and prod. Each profile has its own configuration, and I activate the required profile depending on the environment.
 
+**Easy way to remember:**
+
+`dev` → Dev configuration  
+`prod` → Prod configuration
 ---
 
 <a id="application-properties-and-yml"></a>
