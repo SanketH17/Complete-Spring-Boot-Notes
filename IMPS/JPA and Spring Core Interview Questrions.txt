@@ -1,0 +1,99 @@
+🧩 Scenario-Based JPA Interview Questions
+Entity Relationships
+
+Scenario: You have User and Order entities. A user can place multiple orders. How would you model this relationship using JPA annotations?
+
+Follow-up: What happens if you delete a user? How do you handle cascading deletes?
+
+Lazy vs Eager Loading
+
+Scenario: You notice performance issues due to unnecessary data fetching. How would you optimize entity loading?
+
+Follow-up: How do you prevent LazyInitializationException in a web application?
+
+Custom Queries
+
+Scenario: You need a query to fetch all users who placed orders worth more than ₹10,000 in the last month. How would you write this using JPQL or native SQL?
+
+Optimistic vs Pessimistic Locking
+
+Scenario: Two users try to update the same bank account balance simultaneously. How would you ensure data consistency?
+
+Inheritance Mapping
+
+Scenario: You have a base class Vehicle and subclasses Car and Bike. How would you map this hierarchy in JPA?
+
+Auditing
+
+Scenario: You need to track who created or updated an entity and when. How would you implement auditing in JPA?
+
+🌱 Scenario-Based Spring Core Interview Questions
+Dependency Injection
+
+Scenario: You have multiple implementations of a service interface. How do you inject the correct one based on the environment?
+
+Bean Lifecycle
+
+Scenario: You need to perform custom initialization and cleanup logic for a bean. How would you do that?
+
+Circular Dependency
+
+Scenario: Two beans depend on each other. How would you resolve this circular dependency?
+
+ApplicationContext vs BeanFactory
+
+Scenario: Your application needs advanced features like event propagation and internationalization. Which container would you choose and why?
+
+Profiles
+
+Scenario: You want to load different configurations for development and production. How would you use Spring Profiles?
+
+Custom Scope
+
+Scenario: You need a bean that lives only for a specific user session. How would you define a custom scope?
+
+🌱 Spring Core Interview Questions
+🔧 Core Concepts
+What is Dependency Injection and how is it implemented in Spring?
+
+Explain the difference between ApplicationContext and BeanFactory.
+
+What are the different types of Spring bean scopes?
+
+How does Spring handle bean lifecycle events?
+
+🧩 Configuration & Profiles
+How do you configure beans using annotations vs XML?
+
+What are Spring Profiles and how do you use them?
+
+🔄 AOP & Transactions
+What is Aspect-Oriented Programming (AOP) in Spring?
+
+How do you manage transactions in Spring?
+
+🧠 Advanced Scenarios
+How would you resolve circular dependencies between beans?
+
+How do you inject a prototype bean into a singleton bean?
+
+🗃️ JPA Interview Questions
+🧱 Entity Mapping
+How do you define relationships (OneToOne, OneToMany, ManyToMany) in JPA?
+
+What is the difference between mappedBy and joinColumn?
+
+🐢 Performance & Fetching
+What is the difference between lazy and eager loading?
+
+How do you avoid LazyInitializationException?
+
+🔐 Transactions & Locking
+What is the difference between optimistic and pessimistic locking?
+
+How do you handle concurrent updates to the same entity?
+
+🧠 Advanced Scenarios
+How do you implement auditing in JPA?
+
+What are the different inheritance strategies in JPA?

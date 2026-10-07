@@ -1,0 +1,27 @@
+These test your understanding of REST principles and Spring’s implementation:
+
+What is REST and how is it different from SOAP?
+What are the HTTP methods supported by Spring REST?
+How do you create a RESTful web service using Spring Boot?
+What is the role of @RestController and how is it different from @Controller?
+How do you handle exceptions in Spring REST APIs?
+What is HATEOAS and how is it implemented in Spring?
+How do you version REST APIs in Spring Boot?
+What is the difference between @RequestParam, @PathVariable, and @RequestBody?
+How do you secure REST APIs in Spring Boot?
+What is content negotiation and how does Spring support it?
+ 
+
+🔍 Scenario-Based Spring REST Questions
+
+These simulate real-world challenges and test your problem-solving skills:
+
+You need to expose a REST API that returns a list of users, but only users with the role "ADMIN" should access it. How would you implement this?
+A client is sending malformed JSON to your API, and it’s causing a 500 error. How would you handle this gracefully?
+You’re asked to implement rate limiting on a public REST endpoint. How would you approach this in Spring Boot?
+You need to return a custom HTTP status code and message when a resource is not found. How would you do that?
+You’re building a REST API that supports file upload and download. How would you implement this securely?
+Your API needs to support both XML and JSON responses. How would you configure this?
+You’re asked to log all incoming requests and outgoing responses for debugging. How would you achieve this in Spring Boot?
+You need to paginate a large dataset returned by a REST endpoint. How would you implement pagination and sorting?
+You’re integrating with a third-party API that may timeout. How would you handle retries and fallback logic?

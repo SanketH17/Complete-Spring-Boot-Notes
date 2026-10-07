@@ -592,9 +592,15 @@ class HttpClientConfig {
 
 ### 🎯 Interview Questions
 
-**Q: When would you use `@Bean` instead of `@Component`?**
+### Q: When would you use `@Bean` instead of `@Component`?
 
-> I use `@Bean` when I need to register an object whose source I do not control, such as a third-party client, or when its creation needs custom configuration. I use `@Component`-style annotations for my own application classes.
+> I use **`@Bean`** when I want to create and configure an object manually, especially for **third-party classes**.  
+> I use **`@Component`** for classes that are part of my own application.
+
+**Easy way to remember:**
+
+`@Component` → Spring creates it automatically  
+`@Bean` → **I tell Spring how to create it**
 
 ---
 

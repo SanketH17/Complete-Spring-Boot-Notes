@@ -1,0 +1,59 @@
+
+🧠 Core Concept Questions
+These test your foundational knowledge:
+
+What is Spring Data JPA and how is it different from JPA?
+
+What are the advantages of using Spring Data JPA?
+
+Explain the role of @Entity, @Table, and @Id.
+
+What is the purpose of CrudRepository, JpaRepository, and PagingAndSortingRepository?
+
+How does Spring Data JPA generate queries from method names?
+
+What is the difference between findBy, getBy, and readBy?
+
+How do you define custom queries using @Query annotation?
+
+What is the use of @Modifying and @Transactional annotations?
+
+How does lazy loading work in JPA? What are its pitfalls?
+
+What is the N+1 select problem and how do you resolve it?
+
+🔍 Scenario-Based Questions
+These evaluate your problem-solving skills in real-world situations:
+
+You need to fetch all orders placed by a customer along with product details. How would you design the entity relationships and query?
+
+How would you implement pagination and sorting for a list of products?
+
+You have a legacy database with non-standard naming. How do you map entities to those tables and columns?
+
+You need to update a record without fetching it first. How would you do that in Spring Data JPA?
+
+How would you handle a situation where a query returns too many results and causes performance issues?
+
+You need to implement soft deletes. How would you design your entity and repository?
+
+How do you ensure transactional integrity when saving multiple related entities?
+
+You need to fetch data from multiple tables using a native query. How do you map the result to a DTO?
+
+How would you implement auditing (created/modified timestamps) in Spring Data JPA?
+
+You need to dynamically build queries based on user input. What approach would you use (e.g., Specification, QueryDSL, etc.)?
+
+🧩 Advanced Topics
+For senior-level interviews:
+
+Explain the difference between EntityManager.merge() and EntityManager.persist().
+
+How do you handle concurrency in JPA (optimistic vs pessimistic locking)?
+
+What is the role of EntityGraph and how does it help with performance?
+
+How do you integrate Spring Data JPA with a NoSQL database?
+
+What are the limitations of Spring Data JPA and when would you choose native JPA or JDBC instead?

@@ -1,0 +1,197 @@
+Spring Data JPA -Exercises Day 01 -CRUD Day 01
+
+ 
+
+ 
+
+These focus on entity modeling, repository usage, and data manipulation using Spring Data JPA.
+
+ 
+
+🛒 E-Commerce Spring Data JPA Exercises (No REST Controller needed)
+
+Each exercise includes:
+
+ 
+
+Problem Statement
+
+ 
+
+Description
+
+ 
+
+Entity Involved
+
+ 
+
+1. Create Product and Category Entities with One-to-Many Relationship
+
+Problem: Model products and their categories.
+
+ 
+
+Description: Define Product and Category entities. Each category can have multiple products.
+
+ 
+
+Entities:
+
+ 
+
+Category: id, name
+
+ 
+
+Product: id, name, price, category
+
+ 
+
+2. Persist a New Product with Category
+
+Problem: Save a product and associate it with a category.
+
+ 
+
+Description: Use a repository to save a Product with an existing or new Category.
+
+ 
+
+Entities: Product, Category
+
+ 
+
+3. Find Products by Category Name
+
+Problem: Retrieve all products under a specific category.
+
+ 
+
+Description: Write a query method in ProductRepository to find products by category name.
+
+ 
+
+Entities: Product, Category
+
+ 
+
+4. Create Customer and Address Entities with One-to-One Relationship
+
+Problem: Model customer profiles with addresses.
+
+ 
+
+Description: Define Customer and Address entities. Each customer has one address.
+
+ 
+
+Entities:
+
+ 
+
+Customer: id, name, email, address
+
+ 
+
+Address: id, street, city, zipcode
+
+ 
+
+5. Fetch Customers from a Specific City
+
+Problem: Retrieve customers based on their address city.
+
+ 
+
+Description: Use a derived query to find customers whose address is in a given city.
+
+ 
+
+Entities: Customer, Address
+
+ 
+
+6. Create Order and OrderItem Entities with Many-to-One Relationship
+
+Problem: Model orders with multiple items.
+
+ 
+
+Description: Define Order and OrderItem entities. Each order can have multiple items.
+
+ 
+
+Entities:
+
+ 
+
+Order: id, customer, orderDate
+
+ 
+
+OrderItem: id, order, product, quantity
+
+ 
+
+7. Calculate Total Order Value
+
+Problem: Compute the total value of an order.
+
+ 
+
+Description: Use JPQL or native query to sum the price × quantity for all items in an order.
+
+ 
+
+Entities: Order, OrderItem, Product
+
+ 
+
+8. Find Orders by Customer Email
+
+Problem: Retrieve all orders placed by a customer.
+
+ 
+
+Description: Write a query method in OrderRepository to find orders by customer email.
+
+ 
+
+Entities: Order, Customer
+
+ 
+
+9. Create Cart Entity with Many-to-Many Relationship to Product
+
+Problem: Model a shopping cart with multiple products.
+
+ 
+
+Description: Define Cart and Product entities with a many-to-many relationship.
+
+ 
+
+Entities:
+
+ 
+
+Cart: id, customer, products
+
+ 
+
+Product: id, name, price
+
+ 
+
+10. Add Product to Cart and Persist
+
+Problem: Add a product to a cart and save the update.
+
+ 
+
+Description: Use repository methods to fetch a cart, add a product, and persist the change.
+
+ 
+
+Entities: Cart, Product
