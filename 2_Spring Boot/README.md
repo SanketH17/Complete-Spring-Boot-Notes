@@ -677,6 +677,15 @@ Spring Boot uses starters to add dependencies, auto-configuration to set up thin
 - Why do we need it? We don't need to add each library manually.
 - Example: `spring-boot-starter-web` provides the libraries needed to build REST APIs, including Spring MVC and JSON support.
 
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+By adding this single dependency, Spring Boot brings in the required libraries for building web applications and REST APIs.
+
 Interview answer:
 
 A starter is a group of related dependencies. For example, `spring-boot-starter-web` provides the dependencies needed to build REST APIs without adding each library separately.
@@ -702,7 +711,7 @@ Auto-configuration means Spring Boot automatically configures the required compo
 - Example: Tomcat is the default server when using the Spring Boot web starter.
 - Why do we need it? We can run our application directly without installing a separate server.
 
-```
+```java
 @SpringBootApplication
 public class App {
     public static void main(String[] args) {
