@@ -705,8 +705,6 @@ By adding this **single dependency**, Spring Boot brings in the required librari
 
 We can **override the default configuration** whenever needed.
 
----
-
 ## Example
 
 Suppose we want to connect our Spring Boot application to a MySQL database.
@@ -746,7 +744,6 @@ We don't need to create all these components manually.
 
 We can override the default configuration whenever needed.
 
----
 
 ### Interview Answer
 
@@ -1386,6 +1383,10 @@ public User getUser(@PathVariable java.util.UUID id) {
       return userService.searchByName(name);
   }
   ```
+  **URL Example**:
+  ```
+  GET http://localhost:8080/search?name=Sanket
+  ```
 
 **Common patterns**:
 
@@ -1396,6 +1397,11 @@ public List<User> findUsers(@RequestParam(required = false) String name) {
     return userService.findUsers(name);
 }
 ```
+**URL Examples**:
+```
+GET http://localhost:8080/users?name=Sanket
+GET http://localhost:8080/users
+```
 
 2) Default value (avoids nulls):
 ```java
@@ -1404,6 +1410,11 @@ public List<User> findUsers(@RequestParam(defaultValue = "") String name) {
     return userService.findUsers(name);
 }
 ```
+**URL Examples**:
+```
+GET http://localhost:8080/users?name=Sanket
+GET http://localhost:8080/users
+```
 
 3) Rename / alias the query param:
 ```java
@@ -1411,6 +1422,10 @@ public List<User> findUsers(@RequestParam(defaultValue = "") String name) {
 public List<User> findUsers(@RequestParam("q") String searchText) {
     return userService.search(searchText);
 }
+```
+**URL Example**:
+```
+GET http://localhost:8080/users?q=Sanket
 ```
 
 4) Pagination + sorting (very common in REST APIs):
@@ -1423,6 +1438,12 @@ public List<User> listUsers(
     return userService.listUsers(page, size, sortBy);
 }
 ```
+**URL Examples**:
+```
+GET http://localhost:8080/users?page=0&size=10&sortBy=email
+GET http://localhost:8080/users?page=2
+GET http://localhost:8080/users
+```
 
 5) Multi-value parameters (List):
 ```java
@@ -1431,6 +1452,12 @@ public List<User> byRoles(@RequestParam List<String> role) {
     return userService.findByRoles(role);
 }
 ```
+**URL Examples**:
+```
+GET http://localhost:8080/users?role=ADMIN&role=USER
+GET http://localhost:8080/users?role=ADMIN,USER
+```
+
 
 ### 🔹 `@RequestBody`
 - **Purpose**: Binds HTTP request body to a Java object.
