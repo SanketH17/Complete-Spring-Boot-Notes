@@ -705,9 +705,52 @@ By adding this **single dependency**, Spring Boot brings in the required librari
 
 We can **override the default configuration** whenever needed.
 
-> **Interview answer:**
->
-> **Auto-configuration** means Spring Boot automatically configures the required components based on the dependencies and settings available. We can **customize** the configuration whenever needed.
+---
+
+## Example
+
+Suppose we want to connect our Spring Boot application to a MySQL database.
+
+**Step 1:** Add dependencies in `pom.xml`.
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>com.mysql</groupId>
+    <artifactId>mysql-connector-j</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+**Step 2:** Configure the database in `application.properties`.
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/mydb
+spring.datasource.username=root
+spring.datasource.password=your_password
+
+spring.jpa.hibernate.ddl-auto=update
+```
+
+**Step 3:** What does Spring Boot do automatically?
+
+Spring Boot uses these dependencies and settings to configure the database connection and JPA-related components.
+
+We don't need to create all these components manually.
+
+> **Remember:** We still need to provide the correct database settings and have MySQL running.
+
+We can override the default configuration whenever needed.
+
+---
+
+### Interview Answer
+
+Auto-configuration means Spring Boot automatically configures the required components based on the dependencies and settings available. For example, when we add JPA and MySQL dependencies and configure the database properties, Spring Boot configures the database connection and JPA setup automatically. We can customize the configuration whenever needed.
 
 ---
 
