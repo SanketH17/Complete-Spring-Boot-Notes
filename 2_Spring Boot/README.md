@@ -665,53 +665,84 @@ Spring Boot follows a **layered architecture** built on top of the Spring Framew
 
 ## 4.3 Core Architectural Components
 
+Spring Boot makes it easier to build and run Spring applications. Its four important features are Starters, Auto-Configuration, Embedded Server, and Actuator.
+
+Interview answer in one line:
+
+Spring Boot uses starters to add dependencies, auto-configuration to set up things automatically, an embedded server to run the application, and Actuator to monitor the application.
+
 ### 1. Spring Boot Starter
-- **Purpose**: Simplified dependency management
-- **How it works**:
-  ```xml
-  <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-  </dependency>
-  ```
-  - Bundles Tomcat + Spring MVC + JSON support
+
+- What is it? A group of dependencies required for a particular feature.
+- Why do we need it? We don't need to add each library manually.
+- Example: `spring-boot-starter-web` provides the libraries needed to build REST APIs, including Spring MVC and JSON support.
+
+Interview answer:
+
+A starter is a group of related dependencies. For example, `spring-boot-starter-web` provides the dependencies needed to build REST APIs without adding each library separately.
 
 ### 2. Auto-Configuration
-- **Mechanism**:
-  1. Scans classpath
-  2. Checks `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-  3. Applies defaults
-- **Example**: Adding `spring-boot-starter-data-jpa` auto-configures:
-  - DataSource
-  - Hibernate
-  - JPA EntityManager
+
+- What is it? Spring Boot automatically configures the application based on the dependencies available and the configuration we provide.
+- How does it work?
+  1. We add a starter.
+  2. Spring Boot checks the available libraries.
+  3. It automatically configures the required components with sensible defaults.
+- Example: When we configure Spring Data JPA and database settings, Spring Boot can configure the database connection and JPA setup.
+
+We can override the default configuration whenever needed.
+
+Interview answer:
+
+Auto-configuration means Spring Boot automatically configures the required components based on the dependencies and settings available. We can customize the configuration whenever needed.
 
 ### 3. Embedded Server
-- **Options**: Tomcat (default), Jetty, Undertow
-- **How it works**:
-  ```java
-  @SpringBootApplication
-  public class App {
-      public static void main(String[] args) {
-          // Starts embedded server on port 8080
-          SpringApplication.run(App.class, args);
-      }
-  }
-  ```
+
+- What is it? A web server that comes bundled with the application.
+- Example: Tomcat is the default server when using the Spring Boot web starter.
+- Why do we need it? We can run our application directly without installing a separate server.
+
+```
+@SpringBootApplication
+public class App {
+    public static void main(String[] args) {
+        SpringApplication.run(App.class, args);
+    }
+}
+```
+
+By default, the application runs on port `8080`.
+
+Interview answer:
+
+An embedded server allows us to run our Spring Boot application directly as a JAR file without deploying it to a separately installed server. Tomcat is the default server for the web starter.
 
 ### 4. Spring Boot Actuator
-- **Production monitoring**:
-  ```yaml
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info,metrics
-  ```
-- **Key endpoints**:
-  - `/actuator/health` - Application health
-  - `/actuator/metrics` - Performance metrics
-  - `/actuator/env` - Environment variables
+
+- What is it? A module used to monitor a running application.
+- Why do we need it? It helps us check application health and performance.
+- Important endpoints:
+
+| Endpoint            | Purpose                       |
+| ------------------- | ----------------------------- |
+| `/actuator/health`  | Checks application health     |
+| `/actuator/info`    | Shows application information |
+| `/actuator/metrics` | Shows application metrics     |
+
+Important: Expose only the required endpoints and secure them properly.
+
+Interview answer:
+
+Actuator helps us monitor our Spring Boot application. It provides endpoints to check application health, view information, and measure performance.
+
+## Quick Revision
+
+| Component          | Easy meaning                                               |
+| ------------------ | ---------------------------------------------------------- |
+| Starter            | Adds the required dependencies                             |
+| Auto-Configuration | Configures components automatically                        |
+| Embedded Server    | Runs the application without a separately installed server |
+| Actuator           | Monitors application health and performance                |
 
 ---
 
