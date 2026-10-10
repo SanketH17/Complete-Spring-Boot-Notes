@@ -614,6 +614,8 @@ Spring Boot follows a **layered architecture** built on top of the Spring Framew
 
 ---
 
+![Spring Boot Architecture](./Imgs/1.png)
+
 ## 4.2 Architectural Layers
 
 ### A. Presentation Layer
