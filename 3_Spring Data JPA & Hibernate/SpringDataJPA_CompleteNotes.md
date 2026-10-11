@@ -1499,7 +1499,7 @@ When your REST API returns a `Page`, Spring automatically serializes it to JSON 
 
 ---
 
-# 5 Query Mechanism in Spring Data JPA
+## 5 Query Mechanism in Spring Data JPA
 
 Spring Data JPA gives us different ways to fetch, search, update, and delete database data.
 
