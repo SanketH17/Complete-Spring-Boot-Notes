@@ -1499,453 +1499,199 @@ When your REST API returns a `Page`, Spring automatically serializes it to JSON 
 
 ---
 
-## 5. Query Mechanisms
+# 5 Query Mechanism in Spring Data JPA
 
-> When derived query methods (Section 4.3) aren't enough — maybe the query is too complex, requires joins, or needs database-specific SQL — Spring Data JPA gives you multiple ways to write custom queries. This section covers all of them, from simplest to most advanced.
+Spring Data JPA gives us different ways to fetch, search, update, and delete database data.
 
-### 5.1 JPQL — Java Persistence Query Language
+## 1. Which query method should I use?
 
-#### What is JPQL?
-
-**JPQL** is a query language that looks like SQL, but instead of using **table names and column names** (database world), it uses **Java class names and field names** (Java world). Hibernate then translates your JPQL into the correct SQL for your database.
-
-#### Why does JPQL exist?
-
-Regular SQL is tied to a specific database structure — you reference tables like `users` and columns like `first_name`. But what if you rename a table? Or switch databases? JPQL uses your **Java class and field names**, so your queries stay in sync with your code. If you rename a field in your entity, you know exactly which queries to update.
-
-#### What problem does it solve?
-
-Derived query methods (Section 4.3) work great for simple queries, but they can't handle:
-- Queries with JOINs across multiple entities
-- Aggregate functions (COUNT, SUM, AVG)
-- Subqueries or complex WHERE clauses
-- UPDATE or DELETE operations on multiple rows at once
-- Queries that return partial data (DTOs/projections)
-
-JPQL handles all of these while staying database-independent.
-
-> 🧠 **Analogy — Ordering Food in Your Language:**  
-> Imagine you're at a restaurant in a foreign country. You could try to read the menu in the local language (raw SQL — tables, columns). Or you could use a **translator** who lets you order in your own language (JPQL — classes, fields). You say "I want the User where email is X" and the translator (Hibernate) converts it to the local language (SQL) that the kitchen (database) understands.
-
-#### How JPQL Differs from SQL — Side by Side
-
-```
-JPQL:  SELECT u FROM User u WHERE u.email = :email
-                    ^^^^      ^^^^^^^
-                    Java       Java
-                    class      field
-                    name       name
-
-SQL:   SELECT * FROM users WHERE email = ?
-                     ^^^^^       ^^^^^
-                     table       column
-                     name        name
-```
-
-Key differences:
-- `User` (capital U) = the Java class, NOT the `users` table
-- `u.email` = the Java field, NOT the `email` column (though they often match)
-- `:email` = a **named parameter** (safer than string concatenation — prevents SQL injection!)
-
-#### Step-by-Step: How a JPQL Query Runs
-
-1. You write `@Query("SELECT u FROM User u WHERE u.email = :email")` on a repository method
-2. At **startup**, Spring validates the JPQL syntax and checks that `User` class and `email` field exist
-3. At **runtime**, when you call the method, Hibernate:
-   - Reads the JPQL string
-   - Looks at the `User` entity's `@Table` and `@Column` annotations
-   - Translates JPQL → SQL: `SELECT u.id, u.first_name, u.email, ... FROM users u WHERE u.email = ?`
-   - Binds the parameter values safely (preventing SQL injection)
-   - Executes the SQL and maps the results back to `User` objects
-
-#### Complete JPQL Examples — From Basic to Advanced
-
-```java
-public interface UserRepository extends JpaRepository<User, Long> {
-
-    // ═══════════════════════════════════════════════════════════
-    // BASIC SELECT WITH PARAMETERS
-    // ═══════════════════════════════════════════════════════════
-
-    // Find a user by email AND status using named parameters
-    // :email and :status are placeholders — Spring fills them with the method arguments
-    @Query("SELECT u FROM User u WHERE u.email = :email AND u.status = :status")
-    Optional<User> findActiveByEmail(
-            @Param("email") String email,         // @Param binds this argument to :email
-            @Param("status") UserStatus status    // @Param binds this argument to :status
-    );
-    // Generated SQL: SELECT * FROM users WHERE email = ? AND status = ?
-
-    // ═══════════════════════════════════════════════════════════
-    // JOIN — Query Across Related Entities
-    // ═══════════════════════════════════════════════════════════
-
-    // Find all users in a specific department
-    // "JOIN u.department d" = join using the @ManyToOne relationship defined in User class
-    @Query("SELECT u FROM User u JOIN u.department d WHERE d.name = :deptName")
-    List<User> findByDepartmentName(@Param("deptName") String deptName);
-    // Generated SQL: SELECT u.* FROM users u 
-    //                JOIN departments d ON u.department_id = d.id 
-    //                WHERE d.name = ?
-
-    // ═══════════════════════════════════════════════════════════
-    // JOIN FETCH — Solve the N+1 Problem
-    // ═══════════════════════════════════════════════════════════
-
-    // Load users AND their departments in ONE query (not N+1 separate queries)
-    // JOIN FETCH tells Hibernate: "Load the department data NOW, not later"
-    @Query("SELECT u FROM User u JOIN FETCH u.department WHERE u.status = :status")
-    List<User> findWithDepartmentByStatus(@Param("status") UserStatus status);
-    // Generated SQL: SELECT u.*, d.* FROM users u 
-    //                JOIN departments d ON u.department_id = d.id 
-    //                WHERE u.status = ?
-    // ✅ One query loads BOTH users and departments — no N+1!
-
-    // ═══════════════════════════════════════════════════════════
-    // LIKE — Case-Insensitive Search
-    // ═══════════════════════════════════════════════════════════
-
-    // Search for users by name (case-insensitive, partial match)
-    // LOWER() converts both sides to lowercase for case-insensitive comparison
-    // CONCAT('%', :name, '%') wraps the search term in wildcards
-    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<User> searchByName(@Param("name") String name);
-    // If name = "john", this matches: "John", "JOHN", "johnny", "Johnson"
-
-    // ═══════════════════════════════════════════════════════════
-    // AGGREGATE FUNCTIONS — Count, Sum, Avg, Min, Max
-    // ═══════════════════════════════════════════════════════════
-
-    // Count how many users have a specific status
-    @Query("SELECT COUNT(u) FROM User u WHERE u.status = :status")
-    long countByStatusJpql(@Param("status") UserStatus status);
-    // Generated SQL: SELECT COUNT(*) FROM users WHERE status = ?
-
-    // ═══════════════════════════════════════════════════════════
-    // DTO PROJECTION — Return Only Specific Fields
-    // ═══════════════════════════════════════════════════════════
-
-    // Instead of loading all 20+ fields of User, load only id, firstName, and email
-    // "SELECT new com.example.dto.UserSummaryDto(...)" calls the DTO's constructor
-    @Query("SELECT new com.example.dto.UserSummaryDto(u.id, u.firstName, u.email) " +
-           "FROM User u WHERE u.status = 'ACTIVE'")
-    List<UserSummaryDto> findUserSummaries();
-    // Generated SQL: SELECT u.id, u.first_name, u.email FROM users u WHERE u.status = 'ACTIVE'
-    // ✅ Much faster than loading full User entities when you only need a few fields!
-
-    // ═══════════════════════════════════════════════════════════
-    // MODIFYING QUERIES — UPDATE and DELETE Multiple Rows
-    // ═══════════════════════════════════════════════════════════
-
-    // Bulk update — change status of all users matching a condition
-    // @Modifying tells Spring this is NOT a SELECT — it changes data
-    // @Transactional is required for any data modification
-    @Modifying
-    @Transactional
-    @Query("UPDATE User u SET u.status = :newStatus WHERE u.status = :oldStatus")
-    int updateStatus(
-            @Param("oldStatus") UserStatus oldStatus,
-            @Param("newStatus") UserStatus newStatus
-    );
-    // Returns int = number of rows affected
-    // Generated SQL: UPDATE users SET status = ? WHERE status = ?
-
-    // Bulk delete — remove old inactive users
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM User u WHERE u.status = :status AND u.createdAt < :cutoff")
-    int deleteInactiveUsers(
-            @Param("status") UserStatus status,
-            @Param("cutoff") LocalDateTime cutoff
-    );
-    // Returns int = number of rows deleted
-}
-```
-
-> ⚠️ **Common Mistake — Forgetting `@Modifying` on UPDATE/DELETE queries:**  
-> If you write an UPDATE or DELETE `@Query` without `@Modifying`, Spring will try to run it as a SELECT and you'll get a confusing error. Always pair `@Modifying` + `@Transactional` with any query that changes data.
-
-> ⚠️ **Common Mistake — `@Modifying` and the persistence context:**  
-> After a `@Modifying` query runs, the entities already loaded in your current transaction are **stale** — they still have the old values in memory. Add `@Modifying(clearAutomatically = true)` to clear the persistence context after the query, so the next read fetches fresh data from the database.
-
-> 📝 **Beginner Note — Named parameters (`:email`) vs Positional parameters (`?1`):**  
-> You can use either:
-> ```java
-> // Named parameter — recommended (more readable, order doesn't matter)
-> @Query("SELECT u FROM User u WHERE u.email = :email")
-> User findByEmail(@Param("email") String email);
-> 
-> // Positional parameter — shorter but fragile (order matters!)
-> @Query("SELECT u FROM User u WHERE u.email = ?1")
-> User findByEmail(String email);   // ?1 = first method parameter
-> ```
-> Named parameters are recommended because they're self-documenting and don't break if you reorder method parameters.
-
-> 💡 **Important to Remember — JPQL vs SQL quick comparison:**
-> | | JPQL | SQL |
-> |---|---|---|
-> | References | Java class/field names | Table/column names |
-> | Database-independent? | ✅ Yes | ❌ No |
-> | Validated at startup? | ✅ Yes | ❌ No |
-> | Supports DB-specific features? | ❌ No | ✅ Yes |
-> | Use when | Most queries | DB-specific features needed |
+| Method | Simple meaning | Use it when |
+|---|---|---|
+| **Derived query** | Spring creates a query from the method name | The query is simple, such as finding a user by email |
+| **JPQL (`@Query`)** | Write a query using Java entity and field names | You need joins, counts, filters, or selected fields |
+| **Native SQL** | Write regular database SQL | You need a database-specific feature or complex SQL |
+| **Named query** | Define a query on an entity and call it by name | An existing project uses them or queries are intentionally defined there |
 
 ---
 
-### 5.2 Native SQL Queries
+## 2. JPQL — Query Using Java Class and Field Names
 
-#### What are Native Queries?
+**JPQL looks like SQL, but uses entity class names and Java field names instead of database table and column names.** Hibernate converts JPQL into SQL for the database.
 
-Native queries let you write **raw SQL** — the exact same SQL you'd run directly in your database console. Spring Data JPA passes it straight to the database without any translation.
-
-#### Why would you use native SQL instead of JPQL?
-
-JPQL is great, but it can't do everything. Some database features are only available in native SQL:
-
-- **Window functions:** `ROW_NUMBER()`, `RANK()`, `LAG()`, `LEAD()`
-- **Common Table Expressions (CTEs):** `WITH ... AS (...)`
-- **Database-specific functions:** MySQL's `GROUP_CONCAT()`, PostgreSQL's `JSONB` operators
-- **Complex subqueries** that JPQL doesn't support
-- **Performance-critical queries** where you need exact control over the SQL
-
-> 🧠 **Analogy — Speaking Directly to the Chef:**  
-> JPQL is like telling the waiter your order in English (the waiter translates it for the chef). Native SQL is like **walking into the kitchen and telling the chef exactly what to cook, in their language**. You get full control, but you need to know the kitchen's language (SQL dialect), and your instructions won't work in a different kitchen (different database) without changes.
-
-#### When to Use Native SQL vs JPQL
-
-| Scenario | Use |
-|---|---|
-| Simple CRUD, basic JOINs, standard filtering | JPQL (or derived methods) |
-| Window functions, CTEs, database-specific syntax | **Native SQL** |
-| Need to be database-independent | JPQL |
-| Migrating existing SQL queries into Spring Data | **Native SQL** |
-| Complex reporting queries | **Native SQL** |
-
-#### Examples
+Imagine your entity is `User`, mapped to the database table `users`:
 
 ```java
-public interface UserRepository extends JpaRepository<User, Long> {
-
-    // ═══════════════════════════════════════════════════════════
-    // BASIC NATIVE QUERY
-    // ═══════════════════════════════════════════════════════════
-
-    // nativeQuery = true tells Spring: "This is raw SQL, don't treat it as JPQL"
-    // Notice: we use the TABLE name "users" and COLUMN name "email" (not Java class/field names)
-    @Query(
-        value = "SELECT * FROM users WHERE email = :email",
-        nativeQuery = true
-    )
-    Optional<User> findByEmailNative(@Param("email") String email);
-
-    // ═══════════════════════════════════════════════════════════
-    // NATIVE QUERY WITH PAGINATION
-    // ═══════════════════════════════════════════════════════════
-
-    // For pagination with native queries, you MUST provide a separate countQuery
-    // Why? Spring needs to know the total record count to build the Page object,
-    // but it can't automatically derive a count query from complex native SQL
-    @Query(
-        value = "SELECT u.*, d.name as dept_name " +
-                "FROM users u JOIN departments d ON u.department_id = d.id " +
-                "WHERE u.status = :status",
-        countQuery = "SELECT COUNT(*) FROM users WHERE status = :status",
-        nativeQuery = true
-    )
-    Page<Object[]> findUsersWithDept(@Param("status") String status, Pageable pageable);
-
-    // ═══════════════════════════════════════════════════════════
-    // COMPLEX NATIVE QUERY — Window Functions (impossible in JPQL)
-    // ═══════════════════════════════════════════════════════════
-
-    // Find the most recently created active user in each department
-    // This uses ROW_NUMBER() — a window function that JPQL doesn't support
-    @Query(
-        value = """
-            WITH ranked_users AS (
-                SELECT u.*, 
-                       ROW_NUMBER() OVER (
-                           PARTITION BY u.department_id 
-                           ORDER BY u.created_at DESC
-                       ) as rn
-                FROM users u
-                WHERE u.status = 'ACTIVE'
-            )
-            SELECT * FROM ranked_users WHERE rn = 1
-            """,
-        nativeQuery = true
-    )
-    List<Object[]> findLatestUserPerDepartment();
-    // This query:
-    // 1. Groups users by department (PARTITION BY)
-    // 2. Ranks them by creation date within each group (ORDER BY)
-    // 3. Picks only the #1 ranked user from each group (WHERE rn = 1)
-}
+@Query("SELECT u FROM User u WHERE u.email = :email")
+Optional<User> findByEmail(@Param("email") String email);
 ```
 
-> ⚠️ **Common Mistake — Native queries return `Object[]` by default:**  
-> Unlike JPQL, native queries don't automatically map to your entity class when doing JOINs or selecting specific columns. You get raw `Object[]` arrays and have to extract values by index (`result[0]`, `result[1]`...). For cleaner results, use `@SqlResultSetMapping` or interface-based projections (Section 5.4).
+**What this means:** Find the `User` whose `email` matches the value passed to the method.
 
-> ⚠️ **Common Mistake — Forgetting `countQuery` for pagination:**  
-> If you use a native query with `Pageable` but don't provide `countQuery`, Spring may try to wrap your complex SQL in `SELECT COUNT(*) FROM (your_query)` — which can fail for complex queries or perform poorly. Always provide an explicit `countQuery`.
+- `User` is the Java entity class.
+- `u.email` is the Java field.
+- `:email` is a named placeholder for the method argument.
+- `@Param("email")` connects the method argument to that placeholder.
 
-> 📝 **Beginner Note — Native queries are NOT validated at startup:**  
-> Unlike JPQL queries, native SQL is NOT checked when your application starts. If you have a typo in your SQL, you'll only discover it at runtime when the query actually runs. This makes native queries riskier — always test them!
+**JPQL vs SQL**
 
-> 💡 **Important to Remember — Portability trade-off:**  
-> Native queries tie you to a specific database. If you switch from MySQL to PostgreSQL, your MySQL-specific native queries might break. JPQL queries would work on both without changes. Use native queries only when JPQL genuinely can't express what you need.
+```sql
+-- JPQL: entity and field names
+SELECT u FROM User u WHERE u.email = :email
+
+-- SQL: table and column names
+SELECT * FROM users WHERE email = ?
+```
+
+Use named parameters such as `:email` instead of joining user input into a query string. This is easier to read and helps avoid SQL injection.
+
+### Common JPQL examples
+
+**Find users in a department** — `JOIN` lets the query use a related entity:
+
+```java
+@Query("SELECT u FROM User u JOIN u.department d WHERE d.name = :deptName")
+List<User> findByDepartmentName(@Param("deptName") String deptName);
+```
+
+**Load users and their departments together** — `JOIN FETCH` can prevent the N+1 problem when you need the related data:
+
+```java
+@Query("SELECT u FROM User u JOIN FETCH u.department WHERE u.status = :status")
+List<User> findWithDepartmentByStatus(@Param("status") UserStatus status);
+```
+
+**Search names without case sensitivity:**
+
+```java
+@Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :name, '%'))")
+List<User> searchByName(@Param("name") String name);
+```
+
+For example, searching for `john` can match `John`, `JOHN`, or `Johnson`.
+
+**Count users with a given status:**
+
+```java
+@Query("SELECT COUNT(u) FROM User u WHERE u.status = :status")
+long countByStatus(@Param("status") UserStatus status);
+```
+
+**Return only selected fields using a DTO:**
+
+```java
+@Query("SELECT new com.example.dto.UserSummaryDto(u.id, u.firstName, u.email) FROM User u WHERE u.status = 'ACTIVE'")
+List<UserSummaryDto> findActiveUserSummaries();
+```
+
+The DTO must have a matching constructor. This fetches only the fields needed instead of loading the full entity.
+
+**Update or delete many rows:**
+
+```java
+@Modifying
+@Transactional
+@Query("UPDATE User u SET u.status = :newStatus WHERE u.status = :oldStatus")
+int updateStatus(@Param("oldStatus") UserStatus oldStatus,
+                 @Param("newStatus") UserStatus newStatus);
+```
+
+- Use `@Modifying` for JPQL `UPDATE` and `DELETE` queries.
+- Use a transaction for these data changes.
+- The returned `int` is the number of rows changed.
+- After a bulk update, entities already loaded in the current persistence context may still have old values. `@Modifying(clearAutomatically = true)` can clear that context.
+
+**Remember:** JPQL is usually the best choice for custom queries because it uses Java entity names and is not tied to one database.
 
 ---
 
-### 5.3 Named Queries
+## 3. Native SQL — Write Regular SQL
 
-#### What are Named Queries?
+A **native query** is normal SQL sent directly to the database. Use database table and column names.
 
-Named queries are JPQL (or SQL) queries defined **once on the entity class** and referenced by **name** in the repository. Think of them as pre-registered queries that live alongside your entity definition.
+Use native SQL when you need features JPQL cannot easily express, such as window functions, CTEs, or database-specific functions. For normal searches and joins, prefer a derived query or JPQL.
 
-#### Why do they exist?
+```java
+@Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+Optional<User> findByEmailNative(@Param("email") String email);
+```
 
-Named queries are **validated at application startup**. If you make a typo in the query, your app won't start — you catch the bug before it reaches production. They were popular before `@Query` existed in Spring Data JPA.
+Here, `users` is the database table name. `nativeQuery = true` tells Spring this is SQL, not JPQL.
 
-#### When should you use them?
+### Native query with pagination
 
-**Honestly? Rarely in modern projects.** The `@Query` annotation (Section 5.1) is more convenient because:
-- It keeps the query **right next to the repository method** that uses it (easier to find and maintain)
-- Named queries clutter the entity class with query definitions that don't belong there
+```java
+@Query(
+    value = "SELECT * FROM users WHERE status = :status",
+    countQuery = "SELECT COUNT(*) FROM users WHERE status = :status",
+    nativeQuery = true
+)
+Page<User> findByStatusNative(@Param("status") String status, Pageable pageable);
+```
 
-Named queries are still useful if:
-- You want to centralize queries on the entity for organizational reasons
-- You're working with a legacy codebase that already uses them
+The `countQuery` tells Spring how many matching rows exist so it can build the `Page` result.
 
-> 🧠 **Analogy — Speed Dial vs Contact Search:**  
-> Named queries are like **speed dial** on an old phone — you set them up once (on the entity), assign them a name, and later you just press the name to use them. `@Query` is like searching your contacts directly — you write the query right where you need it. Both get you to the same place, but most people prefer searching contacts (it's quicker to find and update).
+### Things to remember
 
-#### How They Work
+- Native SQL uses table and column names, not entity and field names.
+- It may rely on features specific to your database, so changing databases may require changes to the query.
+- Errors in native SQL are generally found when the query runs, so test it carefully.
+- When selecting joined or partial columns, the result may need a projection or result mapping rather than mapping directly to an entity.
 
-**Step 1: Define the query on the entity class using `@NamedQuery`**
+**Remember:** Use native SQL when you need direct control or a database feature that JPQL does not support.
+
+---
+
+## 4. Named Queries — Define a Query Once and Reuse It by Name
+
+A **named query** is defined on an entity class and used by a repository method with a matching name.
 
 ```java
 @Entity
 @Table(name = "users")
-// Single named query
 @NamedQuery(
-    name = "User.findByEmailAndStatus",    // Name format: EntityName.methodName
-    query = "SELECT u FROM User u WHERE u.email = :email AND u.status = :status"
+    name = "User.findActive",
+    query = "SELECT u FROM User u WHERE u.status = 'ACTIVE'"
 )
-// Multiple named queries — use @NamedQueries
-@NamedQueries({
-    @NamedQuery(
-        name = "User.findActive",
-        query = "SELECT u FROM User u WHERE u.status = 'ACTIVE'"
-    ),
-    @NamedQuery(
-        name = "User.countByDept",
-        query = "SELECT COUNT(u) FROM User u WHERE u.department.id = :deptId"
-    )
-})
-public class User { ... }
-```
-
-**Step 2: Use them in your repository — the method name must match!**
-
-```java
-public interface UserRepository extends JpaRepository<User, Long> {
-    // Spring looks for a named query called "User.findByEmailAndStatus"
-    // (Entity name + "." + method name)
-    // If it finds one, it uses that query. If not, it falls back to derived query parsing.
-    Optional<User> findByEmailAndStatus(String email, UserStatus status);
+public class User {
+    // entity fields
 }
 ```
 
-#### How Spring resolves which query to use (priority order)
+Repository:
 
-When you declare a method in your repository, Spring checks in this order:
-1. **Named query** — Is there a `@NamedQuery` with name `User.methodName`? → Use it
-2. **`@Query` annotation** — Is there a `@Query` on the method? → Use it
-3. **Derived query** — Parse the method name and auto-generate the query
+```java
+public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findActive();
+}
+```
 
-> 📝 **Beginner Note:** For new projects, skip named queries entirely and use `@Query` annotations on your repository methods. They're more readable, more maintainable, and just as powerful.
+Spring can look for the named query `User.findActive` based on the entity name and method name.
+
+Named queries can be checked when the application starts, which can help reveal query mistakes early. However, they put query definitions on the entity, so many modern projects prefer `@Query` directly beside the repository method.
+
+**Remember:** Named queries are useful to know, but `@Query` is often simpler for new code.
 
 ---
 
-### 5.4 Projections — Getting Only What You Need
+## 5. Quick Comparison: JPQL vs Native SQL
 
-#### What are Projections?
-
-A **projection** lets you fetch only **specific columns** from the database, instead of loading the entire entity with all its fields.
-
-#### Why do projections exist?
-
-Loading a full entity means fetching **every column** — even ones you don't need. If your `User` entity has 20 fields but your API endpoint only needs `id`, `firstName`, and `email`, you're wasting memory and network bandwidth by loading the other 17 fields. Projections solve this by telling the database: "Only give me these 3 columns."
-
-#### What problem do they solve?
-
-- **Performance** — Less data transferred from database = faster queries
-- **Memory** — Smaller objects in memory = lower memory usage
-- **Security** — You don't accidentally expose sensitive fields (like `passwordHash`) in API responses
-- **Clarity** — Your code makes it explicit exactly which data it needs
-
-> 🧠 **Analogy — Ordering at a Restaurant:**  
-> Loading a full entity is like ordering the **entire menu** just because you wanted a burger. A projection is like ordering **only the burger** — you get exactly what you need, and the kitchen (database) does less work preparing it.
-
-#### Three Types of Projections
-
-Spring Data JPA supports three approaches. Here's when to use each:
-
-| Projection Type | How It Works | Best For |
+| | JPQL | Native SQL |
 |---|---|---|
-| **Interface-based** | You define a Java interface with getter methods. Spring auto-implements it. | Simple, read-only views — most common |
-| **DTO-based (class)** | You define a DTO class/record. JPQL calls its constructor. | When you need logic, validation, or immutability |
-| **Dynamic** | One method, multiple projection types — caller chooses at runtime. | Flexible APIs that serve different clients |
+| Uses | Entity and field names | Table and column names |
+| Converted by Hibernate? | Yes | SQL is sent directly to the database |
+| Works across databases? | Usually more portable | May depend on the database |
+| Best for | Most custom queries | Database-specific or advanced SQL |
 
----
+## Interview Revision
 
-#### Interface-Based Projection (Recommended for Most Cases)
-
-This is the **simplest and most common** projection type. You define a plain Java interface with getter methods that match your entity's field names. Spring automatically creates a lightweight implementation at runtime.
-
-**Step 1: Define the projection interface**
-
-```java
-// This is NOT a class — it's an interface. Spring creates the implementation for you.
-// Each getter method corresponds to a field you want to fetch from the entity.
-public interface UserSummary {
-
-    Long getId();           // Fetches the 'id' field
-    String getFirstName();  // Fetches the 'firstName' field
-    String getEmail();      // Fetches the 'email' field
-
-    // Computed field using SpEL (Spring Expression Language)
-    // This doesn't map to a database column — it's calculated from other fields
-    @Value("#{target.firstName + ' ' + target.lastName}")
-    String getFullName();   // Returns "John Doe" by combining firstName and lastName
-}
-```
-
-**Step 2: Use it as the return type in your repository**
-
-```java
-public interface UserRepository extends JpaRepository<User, Long> {
-
-    // Instead of returning List<User> (all fields), return List<UserSummary> (only 3 fields)
-    List<UserSummary> findByStatus(UserStatus status);
-    // Generated SQL: SELECT u.id, u.first_name, u.email, u.last_name FROM users u WHERE u.status = ?
-    // ✅ Only fetches the columns needed by UserSummary — NOT all 20+ columns!
-
-    Optional<UserSummary> findProjectedById(Long id);
-}
-```
-
-> 📝 **Beginner Note — How does Spring know which columns to fetch?**  
-> Spring reads the getter methods in your projection interface (`getId()` → `id` column, `getFirstName()` → `first_name` column). It then generates SQL that selects **only those columns**. The method name must follow the standard getter naming: `get` + FieldName.
-
-> 💡 **Important to Remember — Projections summary:**
-> - ✅ **Use projections** for read-only endpoints where you don't need all entity fields
-> - ✅ Projections are especially valuable when your entity has many fields (10+) or contains large text/blob columns
-> - ❌ **Don't use projections** when you need to modify and save the entity — you can't save a projection back to the database
-> - ✅ Interface projections are the **simplest** and should be your default choice
-
----
+- **Derived query:** Spring creates the query from the repository method name.
+- **JPQL:** Write queries using Java entity and field names; Hibernate converts them to SQL.
+- **Native SQL:** Write the database SQL yourself using table and column names.
+- **Named query:** Define a query on the entity and call it by name.
+- **`@Param`:** Connects a method argument to a named query parameter such as `:email`.
+- **`@Modifying`:** Marks a JPQL query that updates or deletes data.
+- **`JOIN FETCH`:** Loads related data in the same query when needed, which can help avoid N+1 queries.
+- **DTO projection:** Fetches only the fields needed for a response.
 
 ## 6. Advanced Topics
 
