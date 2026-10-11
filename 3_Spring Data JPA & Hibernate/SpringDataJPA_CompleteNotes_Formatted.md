@@ -1716,6 +1716,8 @@ Named queries can be checked when the application starts, which can help reveal 
 - **`JOIN FETCH`:** Loads related data in the same query when needed, which can help avoid N+1 queries.
 - **DTO projection:** Fetches only the fields needed for a response.
 
+---
+
 ## 6. Advanced Topics
 
 > This section covers the concepts that separate a beginner JPA developer from a confident, production-ready one. These topics — the N+1 problem, entity lifecycle, dirty checking, transactions, locking, and caching — are the areas where real-world bugs and performance issues live. Master these, and you'll debug JPA problems faster than most senior developers.
@@ -2057,6 +2059,8 @@ public class User {
 
 “Dirty checking is a Hibernate feature that detects changes to managed entities and updates the database automatically when changes are flushed. If the entity is managed inside a `@Transactional` method, I usually don't need to call `save()` after changing its fields.”
 
+---
+
 ### 6.4 JPA Transactions (`@Transactional`)
 
 #### 6.4.1 What is a transaction?
@@ -2304,6 +2308,8 @@ The row stays locked during the transaction. When the transaction finishes, the 
 
 **Optimistic locking** uses `@Version` to detect whether another transaction changed a record. If the version has changed, the update fails. **Pessimistic locking** locks the database row so competing updates have to wait. I would usually start with optimistic locking and use pessimistic locking for specific high-contention operations, such as updating inventory.
 
+---
+
 ### 6.6 Caching in JPA and Spring Boot
 
 #### 6.6.1 What Is Caching?
@@ -2513,6 +2519,9 @@ This example applies the same settings to the named caches. Use Java configurati
 ##### Interview Answer
 
 “Caching stores frequently used data so the application does not have to fetch it from the database every time. Hibernate has a first-level cache by default and an optional second-level cache. Spring Boot also provides `@Cacheable`, `@CachePut`, and `@CacheEvict` to cache method results, update cached data, and remove outdated entries.”
+
+
+
 
 ## 7. Quick Revision Cheat Sheet
 
