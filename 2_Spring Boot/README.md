@@ -210,15 +210,31 @@
     - [Component Classes](#component-classes)
     - [Main Application](#main-application)
   - [12.6 Benefits of IoC Container](#126-benefits-of-ioc-container)
-- [13. Spring Exception Handling](#13-spring-exception-handling)
-  - [13.1 Why Use Exception Handling in Spring?](#131-why-use-exception-handling-in-spring)
-  - [13.2 Types of Exception Handling in Spring](#132-types-of-exception-handling-in-spring)
-  - [13.3 Basic Example with `@ExceptionHandler`](#133-basic-example-with-exceptionhandler)
-  - [13.4 Global Exception Handling with `@ControllerAdvice`](#134-global-exception-handling-with-controlleradvice)
-  - [13.5 Using `@ResponseStatus` on Custom Exceptions](#135-using-responsestatus-on-custom-exceptions)
-  - [13.6 Returning Error Details as Object](#136-returning-error-details-as-object)
-  - [13.7 Best Practices](#137-best-practices)
-  - [13.8 Summary](#138-summary)
+- [13. Exception Handling in Spring Boot](#13-exception-handling-in-spring-boot)
+  - [Table of Contents](#table-of-contents-1)
+  - [1. `@ExceptionHandler`](#1-exceptionhandler)
+    - [Step 1: Create a custom exception](#step-1-create-a-custom-exception)
+    - [Step 2: Handle the exception inside a controller](#step-2-handle-the-exception-inside-a-controller)
+    - [How it works](#how-it-works)
+  - [2. `@ControllerAdvice` and `@RestControllerAdvice`](#2-controlleradvice-and-restcontrolleradvice)
+    - [Difference between the annotations](#difference-between-the-annotations)
+  - [3. Global Exception Handling](#3-global-exception-handling)
+    - [Step 1: Create a common error response](#step-1-create-a-common-error-response)
+    - [Step 2: Create the global exception handler](#step-2-create-the-global-exception-handler)
+    - [How global handling works](#how-global-handling-works)
+  - [4. Standard Error Response](#4-standard-error-response)
+    - [Common HTTP status codes for exception handling](#common-http-status-codes-for-exception-handling)
+  - [5. Validation Error Handling](#5-validation-error-handling)
+    - [Step 1: Add validation rules to the request DTO](#step-1-add-validation-rules-to-the-request-dto)
+    - [Step 2: Use `@Valid` in the controller](#step-2-use-valid-in-the-controller)
+    - [Step 3: Handle validation errors globally](#step-3-handle-validation-errors-globally)
+  - [6. Other Important Points Missing from the Image](#6-other-important-points-missing-from-the-image)
+    - [A. Custom exceptions](#a-custom-exceptions)
+    - [B. Built-in exceptions](#b-built-in-exceptions)
+    - [C. `ResponseEntity`](#c-responseentity)
+    - [D. Logging errors](#d-logging-errors)
+  - [Final Revision: How Everything Connects](#final-revision-how-everything-connects)
+    - [Interview-ready answer](#interview-ready-answer)
 
 ---
 
@@ -3049,131 +3065,475 @@ Here:
 
 ---
 
-# 13. Spring Exception Handling
+# 13. Exception Handling in Spring Boot
 
-## 13.1 Why Use Exception Handling in Spring?
+Exception handling means handling errors properly so that the application does not return confusing error messages or unnecessarily crash when something goes wrong.
 
-- **Graceful error responses** to the client (instead of stack traces).
-- **Centralized error management**.
-- Return **custom status codes** (like 404, 400, 500).
-- Maintain **clean, readable controllers**.
+For example, imagine a REST API that fetches a user:
+
+```http
+GET /api/users/99
+```
+
+If user `99` does not exist, instead of returning a long Java error or stack trace, we want to return a meaningful response:
+
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found with id: 99"
+}
+```
+
+Spring Boot provides several features to make this possible.
 
 ---
 
-## 13.2 Types of Exception Handling in Spring
+## Table of Contents
 
-| Type                       | Annotation Used                           | Scope                |
-| -------------------------- | ----------------------------------------- | -------------------- |
-| **Per-Method**             | `@ExceptionHandler`                       | One controller       |
-| **Global Handling**        | `@ControllerAdvice` + `@ExceptionHandler` | All controllers      |
-| **Response Customization** | `@ResponseStatus`, `ResponseEntity`       | HTTP status and body |
+1. [`@ExceptionHandler`](#1-exceptionhandler)
+2. [`@ControllerAdvice` and `@RestControllerAdvice`](#2-controlleradvice-and-restcontrolleradvice)
+3. [Global Exception Handling](#3-global-exception-handling)
+4. [Standard Error Response](#4-standard-error-response)
+5. [Validation Error Handling](#5-validation-error-handling)
+6. [Other Important Points Missing from the Image](#6-other-important-points-missing-from-the-image)
+7. [Final Revision: How Everything Connects](#final-revision-how-everything-connects)
 
 ---
 
-## 13.3 Basic Example with `@ExceptionHandler`
+## 1. `@ExceptionHandler`
+
+> **Purpose:** Handles a specific exception and defines what response should be returned.
+
+For example, when a requested user does not exist, we can handle the `UserNotFoundException` and return HTTP status `404 Not Found`.
+
+### Step 1: Create a custom exception
+
+```java
+public class UserNotFoundException extends RuntimeException {
+
+    public UserNotFoundException(Long id) {
+        super("User not found with id: " + id);
+    }
+}
+```
+
+This creates our own exception with a meaningful error message.
+
+### Step 2: Handle the exception inside a controller
 
 ```java
 @RestController
+@RequestMapping("/api/users")
 public class UserController {
 
-    @GetMapping("/user/{id}")
-    public User getUser(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    @GetMapping("/{id}")
+    public String getUser(@PathVariable Long id) {
+        if (id == 99L) {
+            throw new UserNotFoundException(id);
+        }
+
+        return "User found with id: " + id;
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<String> handleUserNotFound(
+            UserNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
     }
 }
 ```
 
-- This handles `UserNotFoundException` only **within `UserController`**.
+**URL examples:**
+
+Successful request:
+
+```http
+GET http://localhost:8080/api/users/1
+```
+
+Response:
+
+```text
+User found with id: 1
+```
+
+Request that throws the exception:
+
+```http
+GET http://localhost:8080/api/users/99
+```
+
+Response with HTTP status `404 Not Found`:
+
+```text
+User not found with id: 99
+```
+
+### How it works
+
+1. The request reaches `getUser()`.
+2. If the user is not found, the method throws `UserNotFoundException`.
+3. Spring finds the matching `@ExceptionHandler`.
+4. The handler returns a meaningful response instead of an unhandled exception.
+
+> **Important:** This `@ExceptionHandler` is inside `UserController`, so it handles matching exceptions for that controller. To handle exceptions across multiple controllers, we can use global exception handling.
 
 ---
 
-## 13.4 Global Exception Handling with `@ControllerAdvice`
+## 2. `@ControllerAdvice` and `@RestControllerAdvice`
+
+> **Purpose:** Handle exceptions centrally across multiple controllers instead of writing the same exception-handling code in every controller.
+
+Imagine your application has:
+
+- `UserController`
+- `OrderController`
+- `PaymentController`
+
+All three controllers might encounter errors. Instead of writing the same handlers in each controller, we can create one global handler.
+
+### Difference between the annotations
+
+| Annotation | Purpose |
+| --- | --- |
+| `@ControllerAdvice` | Provides shared exception-handling logic across controllers. |
+| `@RestControllerAdvice` | Provides shared handling and writes returned response data directly to the HTTP response body, making it convenient for REST APIs. |
+| `@ExceptionHandler` | Defines the method that handles a particular exception. |
+
+For REST APIs, `@RestControllerAdvice` is commonly used.
+
+---
+
+## 3. Global Exception Handling
+
+Global exception handling means handling exceptions centrally for the application, rather than separately inside each controller.
+
+Let's create a standard error response first.
+
+### Step 1: Create a common error response
 
 ```java
-@ControllerAdvice
+public record ApiError(
+        int status,
+        String error,
+        String message,
+        LocalDateTime timestamp) {
+}
+```
+
+This defines a consistent structure for error responses.
+
+For example, each error can contain its HTTP status, error type, message, and timestamp.
+
+**URL example:** When `GET http://localhost:8080/api/users/99` fails, the API can return an `ApiError` response.
+
+### Step 2: Create the global exception handler
+
+```java
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ApiError> handleUserNotFound(
+            UserNotFoundException ex) {
+
+        ApiError error = new ApiError(
+                404,
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGeneralException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                             .body("Something went wrong");
+    public ResponseEntity<ApiError> handleUnexpectedException(
+            Exception ex) {
+
+        ApiError error = new ApiError(
+                500,
+                "Internal Server Error",
+                "Something went wrong. Please try again later.",
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(error);
     }
 }
 ```
 
-- `@ControllerAdvice` makes the exception handling **global for all controllers**.
-- You can customize response bodies and status codes for different exceptions.
+**URL examples:**
 
----
+```http
+GET http://localhost:8080/api/users/99
+GET http://localhost:8080/api/orders/invalid
+```
 
-## 13.5 Using `@ResponseStatus` on Custom Exceptions
+The first URL can trigger `UserNotFoundException` if the user is missing. The second illustrates another endpoint that may encounter an unexpected error, provided that the corresponding controller exists.
 
-```java
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class UserNotFoundException extends RuntimeException {
-    public UserNotFoundException(String message) {
-        super(message);
-    }
+Example response for the missing user:
+
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found with id: 99",
+  "timestamp": "2026-10-10T18:00:00"
 }
 ```
 
-- No need for `@ExceptionHandler` if you just want to map an exception to a specific status.
-- Useful for small projects or quick mappings.
+*The timestamp shown is illustrative.*
+
+### How global handling works
+
+- An exception is thrown in a controller or service.
+- Spring looks for a matching exception handler.
+- `@RestControllerAdvice` makes the handler available across controllers.
+- The handler returns a consistent response with the appropriate HTTP status.
+
+> **Remember:** The `Exception.class` handler is a fallback for unexpected exceptions. In production, log the technical details for debugging, but do not return internal stack traces or sensitive details to clients.
 
 ---
 
-## 13.6 Returning Error Details as Object
+## 4. Standard Error Response
 
-```java
-@ControllerAdvice
-public class GlobalExceptionHandler {
+A standard error response means returning errors in the same format across the application.
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
-        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), ex.getMessage(), 404);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
+Without a standard format, one API might return a string, another might return a different JSON structure, and another might return a stack trace. This makes it harder for frontend developers and API clients to handle errors consistently.
+
+Using the `ApiError` record from the previous example, errors can follow this structure:
+
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found with id: 99",
+  "timestamp": "2026-10-10T18:00:00"
 }
 ```
 
+**URL example:**
+
+```http
+GET http://localhost:8080/api/users/99
+```
+
+If that user does not exist, the API returns the error structure with status `404`.
+
+### Common HTTP status codes for exception handling
+
+| Status | Meaning | Example |
+| --- | --- | --- |
+| `400 Bad Request` | Invalid input | Required name is missing |
+| `401 Unauthorized` | Authentication is missing or invalid | Invalid login token |
+| `403 Forbidden` | User is authenticated but lacks permission | User cannot access an admin API |
+| `404 Not Found` | Resource does not exist | User ID not found |
+| `409 Conflict` | Request conflicts with existing data | Email is already registered |
+| `500 Internal Server Error` | Unexpected server-side problem | Unhandled application error |
+
+The status code tells the client what kind of problem occurred, while the response message explains it.
+
+---
+
+## 5. Validation Error Handling
+
+> **Purpose:** Validate incoming data and return understandable messages when the client sends invalid data.
+
+For example, while creating a user, we might require a name and a valid email address.
+
+### Step 1: Add validation rules to the request DTO
+
 ```java
-public class ErrorResponse {
-    private LocalDateTime timestamp;
-    private String message;
-    private int status;
-    // constructor, getters, setters
+public record CreateUserRequest(
+        @NotBlank(message = "Name is required")
+        String name,
+
+        @NotBlank(message = "Email is required")
+        @Email(message = "Email must be valid")
+        String email) {
 }
 ```
 
-This gives **structured JSON error responses**.
+Here:
+
+- `@NotBlank` rejects a missing, empty, or whitespace-only string.
+- `@Email` checks whether the value has a valid email format.
+
+**URL example:** These rules apply when the client sends a request to `POST http://localhost:8080/api/users`.
+
+> **Note:** Make sure the project includes the `spring-boot-starter-validation` dependency.
+
+### Step 2: Use `@Valid` in the controller
+
+```java
+@PostMapping
+public ResponseEntity<String> createUser(
+        @Valid @RequestBody CreateUserRequest request) {
+
+    return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body("User created successfully");
+}
+```
+
+**URL example:**
+
+```http
+POST http://localhost:8080/api/users
+Content-Type: application/json
+```
+
+Valid request body:
+
+```json
+{
+  "name": "Rahul",
+  "email": "rahul@example.com"
+}
+```
+
+This request passes the declared validation rules.
+
+Invalid request body:
+
+```json
+{
+  "name": "",
+  "email": "wrong-email"
+}
+```
+
+Spring detects the validation errors before the controller method completes successfully. It raises `MethodArgumentNotValidException`.
+
+### Step 3: Handle validation errors globally
+
+Add the following method to the existing `GlobalExceptionHandler`:
+
+```java
+@ExceptionHandler(MethodArgumentNotValidException.class)
+public ResponseEntity<ApiError> handleValidationErrors(
+        MethodArgumentNotValidException ex) {
+
+    String message = ex.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .map(error -> error.getField()
+                    + ": " + error.getDefaultMessage())
+            .collect(Collectors.joining(", "));
+
+    ApiError error = new ApiError(
+            400,
+            "Bad Request",
+            message,
+            LocalDateTime.now()
+    );
+
+    return ResponseEntity
+            .badRequest()
+            .body(error);
+}
+```
+
+**URL example:**
+
+```http
+POST http://localhost:8080/api/users
+Content-Type: application/json
+```
+
+With the invalid JSON data above, the response could look like this:
+
+```json
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "name: Name is required, email: Email must be valid",
+  "timestamp": "2026-10-10T18:00:00"
+}
+```
+
+*The exact order of validation messages may vary.*
+
+> **Important:** `@Valid` triggers validation, but it does not decide the error response format by itself. The exception handler allows us to return our chosen format.
 
 ---
 
-## 13.7 Best Practices
+## 6. Other Important Points Missing from the Image
 
-- Use **custom exception classes** for better clarity.
-- Use `@ControllerAdvice` for global consistency.
-- Avoid exposing internal details (stack traces) in production.
-- Return meaningful HTTP status codes (`400`, `401`, `404`, `500`, etc.).
+Your image covers the main topics. For Spring Boot interviews, also learn these related concepts.
+
+### A. Custom exceptions
+
+Create exceptions that describe business problems clearly, such as:
+
+- `UserNotFoundException`
+- `OrderNotFoundException`
+- `EmailAlreadyExistsException`
+
+For example, if a user tries to register with an email already in use, the application can throw `EmailAlreadyExistsException` and return `409 Conflict`.
+
+### B. Built-in exceptions
+
+Spring can also throw exceptions when requests are invalid.
+
+| Exception | Typical situation | Common response |
+| --- | --- | --- |
+| `MethodArgumentNotValidException` | `@Valid` validation fails | `400 Bad Request` |
+| `HttpMessageNotReadableException` | Malformed JSON or unreadable request body | `400 Bad Request` |
+| `MethodArgumentTypeMismatchException` | Wrong type for a parameter, such as text instead of a number | `400 Bad Request` |
+| `UserNotFoundException` | Your application cannot find a requested user | `404 Not Found` |
+
+You can handle these with `@ExceptionHandler` methods. The appropriate status should reflect the actual cause of the error.
+
+### C. `ResponseEntity`
+
+`ResponseEntity` lets you control both the HTTP status and the response body.
+
+```java
+return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .body("User not found");
+```
+
+**URL example:** If returned by the handler for `GET http://localhost:8080/api/users/99`, this sends status `404` with body `User not found`.
+
+### D. Logging errors
+
+In real projects, log unexpected exceptions so developers can investigate the cause. Do not expose stack traces, database details, credentials, or other sensitive information in API responses.
 
 ---
 
-## 13.8 Summary
+## Final Revision: How Everything Connects
 
-| Annotation          | Purpose                                        |
-| ------------------- | ---------------------------------------------- |
-| `@ExceptionHandler` | Handles exceptions in a controller or globally |
-| `@ControllerAdvice` | Declares global exception handlers             |
-| `@ResponseStatus`   | Maps an exception to an HTTP status code       |
-| `ResponseEntity`    | Full control over response body and status     |
+```text
+Client sends an HTTP request
+Example: GET /api/users/99
+            │
+            ▼
+Controller / Service
+Processes request and may throw an exception
+            │
+            ▼
+Exception handler
+@ExceptionHandler handles a matching exception;
+@RestControllerAdvice makes handlers reusable globally
+            │
+            ▼
+Consistent API response
+Appropriate HTTP status + useful error details
+```
+
+### Interview-ready answer
+
+> "Spring Boot exception handling helps us manage application errors and return meaningful HTTP responses. We use `@ExceptionHandler` to handle specific exceptions, and `@RestControllerAdvice` to handle exceptions globally across controllers. We can create custom exceptions for business errors, use a standard error response for consistency, and handle validation errors using `@Valid` and `MethodArgumentNotValidException`."
+
+> **Priority for interviews:** First understand `@ExceptionHandler`, `@RestControllerAdvice`, custom exceptions, `ResponseEntity`, and validation error handling. Then practise handling malformed JSON and unexpected exceptions.
