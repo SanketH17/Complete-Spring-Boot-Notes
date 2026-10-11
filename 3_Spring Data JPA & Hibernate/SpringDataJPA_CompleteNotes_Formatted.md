@@ -1,53 +1,69 @@
 # Spring Data JPA – Complete Developer Notes
-
-> 🧑‍💻 *A single, comprehensive reference for learning, revision, and real-world backend development.*  
-> Covers beginner → advanced. Clean code. Interview-ready.
-
 ---
 
 ## 📋 Table of Contents
 
 1. [Fundamentals](#1-fundamentals)
-   - [1.1 What is JPA?](#11-what-is-jpa)
-   - [1.2 What is Hibernate?](#12-what-is-hibernate)
-   - [1.3 What is Spring Data JPA?](#13-what-is-spring-data-jpa)
-   - [1.4 How They All Fit Together](#14-how-they-all-fit-together)
-   - [1.5 Why Use Spring Data JPA?](#15-why-use-spring-data-jpa)
+   - [What is JPA?](#11-what-is-jpa)
+   - [What is Hibernate?](#12-what-is-hibernate)
+   - [What is Spring Data JPA?](#13-what-is-spring-data-jpa)
+   - [How They All Fit Together](#14-how-they-all-fit-together)
+   - [Why Use Spring Data JPA?](#15-why-use-spring-data-jpa)
 2. [Project Setup](#2-project-setup)
-   - [2.1 Maven Dependencies](#21-maven-dependencies)
-   - [2.2 Gradle Dependencies](#22-gradle-dependencies)
-   - [2.3 application.properties — MySQL Configuration](#23-applicationproperties--mysql-configuration)
-   - [2.4 application.yml — PostgreSQL Configuration](#24-applicationyml--postgresql-configuration)
-   - [2.5 DDL Auto Strategies Explained](#25-ddl-auto-strategies-explained)
+   - [Maven Dependencies](#21-maven-dependencies)
+   - [Gradle Dependencies](#22-gradle-dependencies)
+   - [application.properties — MySQL Configuration](#23-applicationproperties--mysql-configuration)
+   - [application.yml — PostgreSQL Configuration](#24-applicationyml--postgresql-configuration)
+   - [DDL Auto Strategies Explained](#25-ddl-auto-strategies-explained)
 3. [Entity Mapping](#3-entity-mapping)
-   - [3.1 Basic Entity — The Building Block](#31-basic-entity--the-building-block)
-   - [3.2 @GeneratedValue Strategies](#32-generatedvalue-strategies)
-   - [3.3 Relationships](#33-relationships)
-   - [3.4 Fetch Types](#34-fetch-types)
-   - [3.5 Cascade Types](#35-cascade-types)
+   - [Basic Entity — The Building Block](#31-basic-entity--the-building-block)
+   - [@GeneratedValue Strategies](#32-generatedvalue-strategies)
+   - [Relationships](#33-relationships)
+   - [Fetch Types](#34-fetch-types)
+   - [Cascade Types](#35-cascade-types)
 4. [Repository Layer](#4-repository-layer)
-   - [4.1 Repository Hierarchy — Understanding the Family Tree](#41-repository-hierarchy--understanding-the-family-tree)
-   - [4.2 Creating a Repository](#42-creating-a-repository)
-   - [4.3 Query Methods by Naming Convention (Derived Queries)](#43-query-methods-by-naming-convention-derived-queries)
-   - [4.4 Pagination & Sorting](#44-pagination--sorting)
-5. [Query Mechanisms](#5-query-mechanisms)
-   - [5.1 JPQL — Java Persistence Query Language](#51-jpql--java-persistence-query-language)
-   - [5.2 Native SQL Queries](#52-native-sql-queries)
-   - [5.3 Named Queries](#53-named-queries)
-   - [5.4 Projections — Getting Only What You Need](#54-projections--getting-only-what-you-need)
+   - [Repository Hierarchy — Understanding the Family Tree](#41-repository-hierarchy--understanding-the-family-tree)
+   - [Creating a Repository](#42-creating-a-repository)
+   - [Query Methods by Naming Convention (Derived Queries)](#43-query-methods-by-naming-convention-derived-queries)
+   - [Pagination & Sorting](#44-pagination--sorting)
+5. [Query Mechanisms in Spring Data JPA](#5-query-mechanisms-in-spring-data-jpa)
+   - [Which query method should I use?](#51-which-query-method-should-i-use)
+   - [JPQL — Query Using Java Class and Field Names](#52-jpql--query-using-java-class-and-field-names)
+   - [Native SQL — Write Regular SQL](#53-native-sql--write-regular-sql)
+   - [Named Queries — Define a Query Once and Reuse It by Name](#54-named-queries--define-a-query-once-and-reuse-it-by-name)
+   - [Quick Comparison: JPQL vs Native SQL](#55-quick-comparison-jpql-vs-native-sql)
+   - [Interview Revision](#56-interview-revision)
 6. [Advanced Topics](#6-advanced-topics)
-   - [6.1 The N+1 Problem](#61-the-n1-problem--critical--most-common-performance-issue)
-   - [6.2 Entity Lifecycle](#62-entity-lifecycle)
-   - [6.3 Dirty Checking (Auto-Flush)](#63-dirty-checking-auto-flush)
-   - [6.4 Transactions (@Transactional)](#64-transactions-transactional)
-   - [6.5 Optimistic vs Pessimistic Locking](#65-optimistic-vs-pessimistic-locking)
-   - [6.6 Caching](#66-caching)
-     - [First-Level Cache (Always On — Per-Transaction)](#first-level-cache-always-on--per-transaction)
-     - [Second-Level Cache (Cross-Transaction — Needs Configuration)](#second-level-cache-cross-transaction--needs-configuration)
-     - [Cache Concurrency Strategy — Which One to Choose?](#cache-concurrency-strategy--which-one-to-choose)
-     - [Spring Boot Application-Level Caching (@Cacheable, @CachePut, @CacheEvict)](#spring-boot-application-level-caching-cacheable-cacheput-cacheevict)
+   - [The N+1 Problem (⚠️ CRITICAL — Most Common Performance Issue)](#61-the-n1-problem--critical--most-common-performance-issue)
+   - [JPA Entity Lifecycle](#62-jpa-entity-lifecycle)
+   - [Dirty Checking](#63-dirty-checking)
+   - [JPA Transactions (`@Transactional`)](#64-jpa-transactions-transactional)
+   - [JPA Locking: Optimistic vs Pessimistic](#65-jpa-locking-optimistic-vs-pessimistic)
+   - [Caching in JPA and Spring Boot](#66-caching-in-jpa-and-spring-boot)
 7. [Quick Revision Cheat Sheet](#7-quick-revision-cheat-sheet)
+   - [The Stack](#71-the-stack)
+   - [Entity Essentials](#72-entity-essentials)
+   - [Relationships](#73-relationships)
+   - [Cascade Types](#74-cascade-types)
+   - [DDL-Auto Strategies](#75-ddl-auto-strategies)
+   - [Repositories](#76-repositories)
+   - [Derived Query Keywords (Top 15)](#77-derived-query-keywords-top-15)
+   - [Query Resolution Priority](#78-query-resolution-priority)
+   - [Pagination & Sorting](#79-pagination--sorting)
+   - [N+1 Problem — Solutions](#710-n1-problem--solutions)
+   - [Entity Lifecycle States](#711-entity-lifecycle-states)
+   - [Dirty Checking](#712-dirty-checking)
+   - [@Transactional](#713-transactional)
+   - [Locking](#714-locking)
+   - [Caching](#715-caching)
+   - [Common Gotchas](#716-common-gotchas)
 8. [Interview Questions & Answers](#8-interview-questions--answers)
+   - [Fundamentals](#81-fundamentals)
+   - [Entity Mapping](#82-entity-mapping)
+   - [N+1 & Performance](#83-n1--performance)
+   - [Transactions](#84-transactions)
+   - [Queries](#85-queries)
+   - [Advanced](#86-advanced)
 
 ---
 
@@ -694,6 +710,7 @@ public class UserProfile {
 ```
 
 **What happens in the database:**
+
 ```
 users table:           user_profiles table:
 +----+-------+------------+    +----+------+
@@ -702,6 +719,7 @@ users table:           user_profiles table:
 |  1 | a@b.c |          1 |    |  1 | Hi!  |
 +----+-------+------------+    +----+------+
 ```
+
 The `profile_id` foreign key lives in the `users` table because `User` is the owner side.
 
 ---
@@ -773,6 +791,7 @@ public class Employee {
 ```
 
 **What happens in the database:**
+
 ```
 departments table:         employees table:
 +----+-------------+      +----+-------+---------------+
@@ -850,6 +869,7 @@ public class Course {
 ```
 
 **What happens in the database:**
+
 ```
 students table:        student_courses (JOIN TABLE):     courses table:
 +----+-------+        +------------+-----------+        +----+---------+
@@ -860,6 +880,7 @@ students table:        student_courses (JOIN TABLE):     courses table:
 +----+-------+        |          2 |         1 |        +----+---------+
                        +------------+-----------+
 ```
+
 Alice is enrolled in Math and Science. Bob is enrolled in Math. The join table stores these many-to-many connections.
 
 > ⚠️ **Common Mistake — `CascadeType.ALL` on @ManyToMany:**  
@@ -1033,9 +1054,11 @@ Repository (marker interface — empty, does nothing by itself)
 ### 4.2 Creating a Repository
 
 #### What is this?
+
 A repository interface is a plain Java interface that extends `JpaRepository`. By doing this, you instantly get dozens of ready-to-use database methods — without writing a single line of implementation code.
 
 #### Why does it exist?
+
 Without repositories, you'd have to write repetitive `EntityManager` code for every entity — `persist()`, `find()`, `remove()`, manual transaction handling, etc. Repositories eliminate all of that boilerplate.
 
 > 🧠 **Analogy — A TV Remote:**  
@@ -1499,11 +1522,11 @@ When your REST API returns a `Page`, Spring automatically serializes it to JSON 
 
 ---
 
-## 5 Query Mechanism in Spring Data JPA
+## 5. Query Mechanisms in Spring Data JPA
 
 Spring Data JPA gives us different ways to fetch, search, update, and delete database data.
 
-## 1. Which query method should I use?
+### 5.1 Which query method should I use?
 
 | Method | Simple meaning | Use it when |
 |---|---|---|
@@ -1514,7 +1537,7 @@ Spring Data JPA gives us different ways to fetch, search, update, and delete dat
 
 ---
 
-## 2. JPQL — Query Using Java Class and Field Names
+### 5.2 JPQL — Query Using Java Class and Field Names
 
 **JPQL looks like SQL, but uses entity class names and Java field names instead of database table and column names.** Hibernate converts JPQL into SQL for the database.
 
@@ -1544,7 +1567,7 @@ SELECT * FROM users WHERE email = ?
 
 Use named parameters such as `:email` instead of joining user input into a query string. This is easier to read and helps avoid SQL injection.
 
-### Common JPQL examples
+#### 5.2.1 Common JPQL examples
 
 **Find users in a department** — `JOIN` lets the query use a related entity:
 
@@ -1604,7 +1627,7 @@ int updateStatus(@Param("oldStatus") UserStatus oldStatus,
 
 ---
 
-## 3. Native SQL — Write Regular SQL
+### 5.3 Native SQL — Write Regular SQL
 
 A **native query** is normal SQL sent directly to the database. Use database table and column names.
 
@@ -1617,7 +1640,7 @@ Optional<User> findByEmailNative(@Param("email") String email);
 
 Here, `users` is the database table name. `nativeQuery = true` tells Spring this is SQL, not JPQL.
 
-### Native query with pagination
+#### 5.3.1 Native query with pagination
 
 ```java
 @Query(
@@ -1630,7 +1653,7 @@ Page<User> findByStatusNative(@Param("status") String status, Pageable pageable)
 
 The `countQuery` tells Spring how many matching rows exist so it can build the `Page` result.
 
-### Things to remember
+#### 5.3.2 Things to remember
 
 - Native SQL uses table and column names, not entity and field names.
 - It may rely on features specific to your database, so changing databases may require changes to the query.
@@ -1641,7 +1664,7 @@ The `countQuery` tells Spring how many matching rows exist so it can build the `
 
 ---
 
-## 4. Named Queries — Define a Query Once and Reuse It by Name
+### 5.4 Named Queries — Define a Query Once and Reuse It by Name
 
 A **named query** is defined on an entity class and used by a repository method with a matching name.
 
@@ -1673,7 +1696,7 @@ Named queries can be checked when the application starts, which can help reveal 
 
 ---
 
-## 5. Quick Comparison: JPQL vs Native SQL
+### 5.5 Quick Comparison: JPQL vs Native SQL
 
 | | JPQL | Native SQL |
 |---|---|---|
@@ -1682,7 +1705,7 @@ Named queries can be checked when the application starts, which can help reveal 
 | Works across databases? | Usually more portable | May depend on the database |
 | Best for | Most custom queries | Database-specific or advanced SQL |
 
-## Interview Revision
+### 5.6 Interview Revision
 
 - **Derived query:** Spring creates the query from the repository method name.
 - **JPQL:** Write queries using Java entity and field names; Hibernate converts them to SQL.
@@ -1855,440 +1878,344 @@ private List<Employee> employees;
 
 ---
 
-### 6.2 Entity Lifecycle
+### 6.2 JPA Entity Lifecycle
 
-#### What is the Entity Lifecycle?
+An **entity** is a Java object that represents a row in a database table.
 
-Every JPA entity (a Java object mapped to a database row) goes through a series of **states** during its life. Understanding these states is essential because JPA behaves very differently depending on which state your entity is in — some changes are auto-saved, some are ignored, and some cause exceptions.
+JPA entities can be in four states. The state tells us whether JPA is tracking the object and whether changes can be saved automatically.
 
-#### Why does it matter?
+#### 6.2.1 The Four States
 
-If you don't understand entity states, you'll hit confusing bugs:
-- "I called `setEmail()` but the database didn't update!" → Your entity was **detached**.
-- "I got a `LazyInitializationException`!" → You tried to access a lazy field on a **detached** entity.
-- "My `save()` created a duplicate instead of updating!" → You passed a **transient** entity instead of a **managed** one.
+| State | Simple meaning | Example |
+|---|---|---|
+| **Transient** | A new Java object that JPA is not tracking. | `new User()` |
+| **Managed** | JPA is tracking the object. Changes are saved when the transaction commits. | An entity loaded inside a transaction |
+| **Detached** | The object was tracked before, but JPA is no longer tracking it. Changes are not saved automatically. | An entity after its persistence context ends |
+| **Removed** | The entity is marked for deletion. The database row is deleted when the transaction commits. | An entity passed to `remove()` or deleted through a repository in a transaction |
 
-> 🧠 **Analogy — A Student and Their School:**  
-> Think of JPA as a **school**, and each entity as a **student**:
-> - **Transient (not enrolled):** The student exists as a person, but the school doesn't know about them. Their grades aren't tracked.
-> - **Managed (currently enrolled):** The student is registered at the school. Every quiz they take, every grade they earn — the school records it automatically. The school is "watching" them.
-> - **Detached (graduated/transferred):** The student used to be enrolled, but they left. The school still has their old records, but if they take a new quiz now, no one records it.
-> - **Removed (expelled):** The student is being removed from the school's records. Once the paperwork is processed (transaction commits), they're gone.
+#### 6.2.2 Simple Lifecycle Flow
 
-#### The Four States — Visual Diagram
-
-```
-                        ┌──────────────────────────────────────────────────┐
-                        │                                                  │
-  ┌──────────────┐      │      ┌───────────┐     remove()     ┌─────────┐ │
-  │              │  persist()   │           │ ────────────────→ │         │ │
-  │  TRANSIENT   │ ──────────→ │  MANAGED  │                   │ REMOVED │ │
-  │  (new object)│             │ (tracked) │ ←── merge() ──── │         │ │
-  │              │             │           │                   └─────────┘ │
-  └──────────────┘             └───────────┘                               │
-                                    │                                      │
-                            detach() / clear()                             │
-                            / transaction ends                             │
-                                    │                                      │
-                                    ▼                                      │
-                              ┌───────────┐                                │
-                              │           │       merge()                  │
-                              │ DETACHED  │ ───────────────────────────────┘
-                              │ (orphaned)│       (re-attaches to Managed)
-                              │           │
-                              └───────────┘
+```text
+Transient --persist/save--> Managed --remove/delete--> Removed
+                               |
+                     transaction ends, detach, or clear
+                               v
+                            Detached
+                               |
+                         merge/save
+                               v
+                            Managed
 ```
 
-#### Each State Explained in Detail
+> **Remember:** Managed = tracked. Detached = not tracked.
 
-| State | What It Means | How You Get Here | What JPA Does |
-|---|---|---|---|
-| **Transient** | A regular Java object. JPA has no idea it exists. | `new User()` | **Nothing.** It's just a Java object in memory. |
-| **Managed** | JPA is actively watching this object. Any change you make to its fields will be **automatically saved** to the database when the transaction commits. | After `save()`, `findById()`, `persist()` | **Tracks all changes.** Runs UPDATE SQL automatically at commit time. |
-| **Detached** | The object **was** managed, but the JPA session/transaction has ended. It still holds data, but JPA is no longer watching it. | Transaction ends, `EntityManager.detach()`, `clear()`, `close()` | **Ignores changes.** You can modify the object, but nothing is saved. |
-| **Removed** | The object is scheduled for deletion. When the transaction commits, the row will be deleted from the database. | After `delete()`, `remove()` | **Deletes on commit.** Runs DELETE SQL when the transaction completes. |
+#### 6.2.3 Example of Each State
 
-#### Code Examples — Walking Through Each State
+##### A. Transient — just a Java object
 
 ```java
-// ── STATE 1: TRANSIENT ──────────────────────────────────────
-User user = new User();                // ← TRANSIENT
-user.setFirstName("Alice");            // Just a Java object in memory
-user.setEmail("alice@example.com");    // JPA doesn't know or care about this object
-// No database operation happens. If you lose the reference, this object is gone.
+User user = new User();
+user.setEmail("alice@example.com");
+```
 
-// ── STATE 2: MANAGED ────────────────────────────────────────
-User savedUser = userRepository.save(user);  // ← Now MANAGED
-// Hibernate ran: INSERT INTO users (first_name, email, ...) VALUES ('Alice', 'alice@example.com', ...)
-// The returned 'savedUser' has a generated ID and is being tracked by JPA.
-// ANY change to 'savedUser' will be auto-saved when the transaction commits (see 6.3 Dirty Checking).
+JPA is not tracking this object, so creating or changing it does not save anything to the database.
 
-// ── STATE 3: DETACHED ───────────────────────────────────────
-// After the @Transactional method returns, the transaction ends.
-// 'savedUser' is now DETACHED — JPA is no longer watching it.
-// savedUser.setEmail("newemail@example.com"); ← This change is LOST! JPA won't save it.
+##### B. Managed — JPA tracks changes
 
-// ⚠️ Accessing lazy-loaded fields on a detached entity = LazyInitializationException!
-// savedUser.getDepartment().getName(); ← CRASH if department wasn't loaded during the transaction
-
-// ── RE-ATTACHING: Detached → Managed ───────────────────────
-// You can re-attach a detached entity by calling save() again inside a new transaction
+```java
 @Transactional
-public User reattachUser(User detachedUser) {
-    return userRepository.save(detachedUser); // ← merge() happens → MANAGED again
-    // Hibernate runs: UPDATE users SET ... WHERE id = ?
-}
-
-// ── STATE 4: REMOVED ────────────────────────────────────────
-@Transactional
-public void deleteUser(Long userId) {
-    User user = userRepository.findById(userId).orElseThrow(); // ← MANAGED
-    userRepository.delete(user);  // ← Now REMOVED (scheduled for deletion)
-    // Hibernate will run: DELETE FROM users WHERE id = ?
-    // The DELETE SQL runs when the transaction commits.
+public void updateEmail(Long id) {
+    User user = userRepository.findById(id).orElseThrow();
+    user.setEmail("new@example.com");
 }
 ```
 
-> ⚠️ **Common Mistake — Modifying a detached entity and expecting it to save:**  
-> After a transaction ends, the entity is detached. Calling `user.setEmail("new@email.com")` on a detached entity has **zero effect** on the database. You must re-attach it by calling `save()` inside a new `@Transactional` method.
+The entity is managed inside the transaction. When the method finishes successfully, Hibernate detects the change and updates the database. This is called **dirty checking**; you do not need to call `save()` for this change.
 
-> ⚠️ **Common Mistake — `LazyInitializationException`:**  
-> This is one of the most common JPA errors. It happens when you try to access a lazy-loaded relationship (like `user.getDepartment()`) **outside** of a transaction. The entity is detached, and JPA can't go back to the database to fetch the lazy data. **Fix:** Load everything you need *inside* the `@Transactional` method — either by accessing the field or using `JOIN FETCH`.
+##### C. Detached — changes are not tracked
 
-> 💡 **Important to Remember:**  
-> - **Managed** = JPA is watching. Changes are auto-saved.
-> - **Detached** = JPA is NOT watching. Changes are ignored.
-> - Most bugs happen because developers don't realize their entity is detached. When in doubt, check if you're inside a `@Transactional` method.
+```java
+User user = userRepository.findById(1L).orElseThrow();
+user.setEmail("new@example.com");
+```
+
+If the repository call's transaction has ended, the returned entity is typically detached. Changing its email does **not** automatically update the database.
+
+To save changes to a detached entity, call `save()` in a suitable transaction and use the returned object if you need the managed instance:
+
+```java
+@Transactional
+public User updateDetachedUser(User user) {
+    user.setEmail("new@example.com");
+    return userRepository.save(user);
+}
+```
+
+Spring Data JPA uses `merge` when it needs to copy changes from an existing detached entity into a managed entity. The returned object may be a different Java object from the one passed in.
+
+##### D. Removed — marked for deletion
+
+```java
+@Transactional
+public void deleteUser(Long id) {
+    User user = userRepository.findById(id).orElseThrow();
+    userRepository.delete(user);
+}
+```
+
+The entity is marked for deletion. The SQL `DELETE` is executed as the transaction is flushed or committed.
+
+#### 6.2.4 What Is `LazyInitializationException`?
+
+A relationship may be **lazy-loaded**, meaning JPA fetches its data only when you first access it.
+
+If you access that relationship after the entity's persistence context has closed, JPA may no longer be able to load it and can throw `LazyInitializationException`.
+
+**Simple fix:** Load the required relationship while the transaction is active, for example with `JOIN FETCH` or `@EntityGraph`.
+
+#### 6.2.5 Common Mistakes
+
+- **Changing a detached entity:** the change is not automatically saved. Save/merge it in a transaction, or load it again inside a transaction and update it there.
+- **Assuming `save()` always returns the same object:** for an existing detached entity, `save()` may return a different managed object. Use the returned value when needed.
+- **Accessing lazy data too late:** fetch the data before the persistence context closes.
+- **Calling `save()` for every managed change:** inside a transaction, changes to a managed entity are detected automatically at commit.
+
+#### 6.2.6 Interview Answer
+
+“JPA entities have four states: transient, managed, detached, and removed. A transient object is not tracked by JPA. A managed entity is tracked, so its changes can be saved automatically when the transaction commits. A detached entity is no longer tracked, so its changes are not saved automatically. A removed entity is marked for deletion.”
 
 ---
 
-### 6.3 Dirty Checking (Auto-Flush)
+### 6.3 Dirty Checking
 
-#### What is Dirty Checking?
+#### 6.3.1 What Is Dirty Checking?
 
-Dirty checking is Hibernate's ability to **automatically detect changes** you make to managed entities and **save them to the database** — without you calling `save()` or writing any UPDATE SQL. If an entity is "dirty" (modified since it was loaded), Hibernate flushes the change at commit time.
+**Dirty checking means Hibernate notices changes to a managed entity and saves those changes to the database automatically.** You usually do not need to call `save()` again.
 
-#### Why does it exist?
+Think of it like auto-save in a document: change the value, and Hibernate detects the change.
 
-Without dirty checking, you'd have to explicitly call `save()` or `update()` every time you change a field. With dirty checking, you just modify the Java object, and Hibernate handles the rest. This makes your code cleaner and less error-prone.
+#### 6.3.2 How It Works
 
-#### What problem does it solve?
+1. Load an entity inside a `@Transactional` method.
+2. Hibernate tracks the entity and remembers its original values.
+3. Change a field, such as the user's email.
+4. When Hibernate flushes changes (often at transaction commit), it detects the difference and runs an `UPDATE` query.
 
-It prevents a common bug: forgetting to call `save()` after modifying an entity. With dirty checking, as long as the entity is managed (inside a `@Transactional` method), your changes are guaranteed to be persisted.
-
-> 🧠 **Analogy — A Google Doc with Auto-Save:**  
-> Think of a managed entity as a **Google Doc**. When you edit a Google Doc, you never click "Save" — Google automatically detects every keystroke and saves it. That's exactly what dirty checking does. The moment you change a field (`user.setEmail("new@email.com")`), Hibernate notes the change and "auto-saves" it when the transaction finishes.
->
-> But if you **download the Google Doc as a PDF** and edit the PDF locally, Google has no idea — your changes aren't saved. That's what happens when you edit a **detached** entity: Hibernate isn't watching anymore, so nothing is auto-saved.
-
-#### Step-by-Step: How Dirty Checking Works Behind the Scenes
-
-1. You call `userRepository.findById(1L)` inside a `@Transactional` method
-2. Hibernate loads the `User` from the database and **takes a snapshot** of all its field values (like a "before" photo)
-3. The entity is now **managed** — Hibernate stores both the entity and the snapshot
-4. You call `user.setEmail("newemail@example.com")` — you just changed a field
-5. When the transaction commits, Hibernate **compares** the current entity state to the original snapshot
-6. It detects that `email` changed from `"old@email.com"` to `"newemail@example.com"`
-7. Hibernate generates and executes: `UPDATE users SET email = 'newemail@example.com' WHERE id = 1`
-
-You never called `save()`. Hibernate figured it out on its own.
-
-#### Example: Dirty Checking in Action
+#### 6.3.3 Example — Dirty Checking Works
 
 ```java
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private final UserRepository userRepository;
 
-    // ✅ CORRECT — Dirty checking works inside @Transactional
     @Transactional
-    public void updateUserEmail(Long userId, String newEmail) {
+    public void updateEmail(Long userId, String newEmail) {
         User user = userRepository.findById(userId).orElseThrow();
-        // 'user' is now MANAGED — Hibernate is watching it
-
-        user.setEmail(newEmail);  // Just change the field — that's all you need to do!
-
-        // NO save() call needed!
-        // When this method returns, the transaction commits.
-        // Hibernate compares the current state to the original snapshot,
-        // sees that 'email' changed, and runs:
-        // UPDATE users SET email = ? WHERE id = ?
+        user.setEmail(newEmail);
+        // No save() needed: Hibernate detects the change.
     }
 }
 ```
 
-Here's what goes wrong if you're NOT inside a `@Transactional` method:
+**What happens:** The user is loaded and tracked in the transaction. When the transaction commits, Hibernate detects the changed email and updates the database.
+
+#### 6.3.4 When Dirty Checking Does Not Work
+
+Dirty checking does not automatically save changes to an entity that is **detached** (no longer tracked by Hibernate).
 
 ```java
-// ❌ BAD — Dirty checking does NOT work outside a transaction
-public void badExample(Long userId) {
+public void updateEmail(Long userId) {
     User user = userRepository.findById(userId).orElseThrow();
-    // findById() opens its own mini-transaction, loads the user, and closes the transaction immediately.
-    // The user is now DETACHED — Hibernate is no longer watching it.
+    // The repository transaction has ended; this entity may now be detached.
 
     user.setEmail("new@email.com");
-    // This change is LOST! The entity is detached.
-    // Hibernate doesn't know about this change and won't save it.
-    // No UPDATE SQL is ever generated. The database still has the old email.
+    // This change is not automatically saved.
 }
 ```
 
-> ⚠️ **Common Mistake — Calling `save()` unnecessarily on managed entities:**  
-> If you're inside a `@Transactional` method and the entity was loaded in that same transaction, calling `save()` is redundant — dirty checking will handle it. However, calling `save()` doesn't hurt; it just triggers an unnecessary merge check. Some teams prefer to always call `save()` for readability — that's fine, but know that it's not required.
+**Fix:** Make the update inside a service method annotated with `@Transactional`, as shown in the previous example.
 
-> ⚠️ **Common Mistake — Dirty checking on ALL fields:**  
-> By default, Hibernate generates an UPDATE that includes **every column** of the entity, even if only one field changed. For entities with many columns, this can be wasteful. You can optimize this with `@DynamicUpdate` on the entity class, which makes Hibernate generate UPDATE statements that include only the changed columns:
-> ```java
-> @Entity
-> @DynamicUpdate  // UPDATE only includes changed columns
-> public class User { ... }
-> ```
+#### 6.3.5 Important Points
 
-> 📝 **Beginner Note — Summary of dirty checking rules:**
-> - ✅ Works on **managed** entities (loaded inside a `@Transactional` method)
-> - ❌ Does NOT work on **detached** entities (outside a transaction)
-> - ❌ Does NOT work on **transient** entities (new objects that were never saved)
-> - ✅ You do NOT need to call `save()` for changes to be persisted — just modify the fields
-
-> 💡 **Important to Remember:** Dirty checking is the reason why `@Transactional` on service methods is so important. Without it, your entities are detached, and no changes are auto-saved. Always annotate your service methods that modify data with `@Transactional`.
-
----
-
-### 6.4 Transactions (@Transactional)
-
-#### What is a Transaction?
-
-A **transaction** is a group of database operations that must either **all succeed together** or **all fail together**. There's no in-between. If any operation fails, everything is rolled back as if nothing happened.
-
-#### Why do transactions exist?
-
-Without transactions, a failure halfway through a multi-step operation could leave your database in an inconsistent state. Imagine transferring money from Account A to Account B: you debit A, but the app crashes before crediting B. Without a transaction, A lost money and B didn't receive it. With a transaction, the debit is rolled back and both accounts stay consistent.
-
-#### What problem does `@Transactional` solve?
-
-In raw Java, managing transactions requires a lot of boilerplate code — begin transaction, try-catch, commit on success, rollback on failure, close resources. Spring's `@Transactional` annotation handles **all of that** with a single annotation. You focus on business logic; Spring handles the transaction plumbing.
-
-> 🧠 **Analogy — An All-or-Nothing Wedding Ceremony:**  
-> Think of a transaction as a **wedding ceremony**:
-> - The bride says "I do" ✅
-> - The groom says "I do" ✅
-> - The officiant says "You are now married" ✅ → **COMMIT** (everything is saved)
->
-> But if the groom says "I don't" ❌ → **ROLLBACK** — the wedding is cancelled, the bride's "I do" is also undone. Nobody is married. It's all or nothing.
->
-> In database terms: either ALL your saves, updates, and deletes within the transaction are committed to the database, or NONE of them are.
-
-#### Step-by-Step: What Happens When You Use @Transactional
-
-1. You call a `@Transactional` method
-2. **Spring's proxy** intercepts the call and **begins a database transaction**
-3. Your method runs — any `save()`, `findById()`, `delete()` calls are part of this transaction
-4. If your method **completes normally** → Spring **commits** the transaction (all changes are saved)
-5. If your method **throws a RuntimeException** → Spring **rolls back** the transaction (all changes are undone)
+- **Managed entity:** Hibernate tracks it; changes can be saved automatically.
+- **Detached entity:** Hibernate no longer tracks it; changes are not automatically saved.
+- **Transient entity:** A new object that has not been saved; changing it does not update the database.
+- `save()` is usually unnecessary when changing an already managed entity inside the same transaction.
+- **Dirty checking** detects changes. **Flush** sends pending SQL to the database. **Commit** completes the transaction.
+- By default, an `UPDATE` may include more columns than just the changed field. Hibernate's `@DynamicUpdate` can make the SQL include only changed columns:
 
 ```java
-import org.springframework.transaction.annotation.Transactional;
+@Entity
+@DynamicUpdate
+public class User {
+    // fields...
+}
+```
 
+#### 6.3.6 Interview Answer
+
+“Dirty checking is a Hibernate feature that detects changes to managed entities and updates the database automatically when changes are flushed. If the entity is managed inside a `@Transactional` method, I usually don't need to call `save()` after changing its fields.”
+
+### 6.4 JPA Transactions (`@Transactional`)
+
+#### 6.4.1 What is a transaction?
+
+A **transaction** is a group of database actions that should succeed or fail together.
+
+**Example: transferring money**
+
+1. Subtract ₹500 from Account A.
+2. Add ₹500 to Account B.
+
+Both actions should succeed. If one fails, the database changes should be undone.
+
+- **Commit** = save the changes.
+- **Rollback** = undo the changes.
+
+#### 6.4.2 What does `@Transactional` do?
+
+`@Transactional` tells Spring to manage a database transaction for a method.
+
+- If the method finishes successfully, Spring commits the transaction.
+- If an unchecked exception (`RuntimeException`) or an `Error` escapes the method, Spring rolls it back by default.
+
+##### Example
+
+```java
 @Service
-@RequiredArgsConstructor
-public class OrderService {
+public class BankService {
 
-    private final OrderRepository orderRepository;
-    private final InventoryService inventoryService;
-    private final PaymentService paymentService;
+    private final AccountRepository accountRepository;
 
-    // ═══════════════════════════════════════════════════════════
-    // BASIC TRANSACTION — All-or-Nothing
-    // ═══════════════════════════════════════════════════════════
+    public BankService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
 
-    @Transactional  // ← This one annotation gives you full transaction safety!
-    public Order createOrder(CreateOrderRequest request) {
-        // Step 1: Create the order
-        Order order = new Order();
-        // ... setup order details ...
+    @Transactional
+    public void transferMoney(Long fromId, Long toId) {
+        Account from = accountRepository.findById(fromId).orElseThrow();
+        Account to = accountRepository.findById(toId).orElseThrow();
 
-        // Step 2: Reserve inventory (deduct stock)
-        inventoryService.reserve(request.getProductId(), request.getQuantity());
-
-        // Step 3: Charge payment
-        paymentService.charge(request.getPaymentDetails());
-
-        // Step 4: Save the order
-        return orderRepository.save(order);
-
-        // ✅ If ALL steps succeed → transaction COMMITS → order saved, inventory updated, payment charged
-        // ❌ If ANY step throws RuntimeException → transaction ROLLS BACK →
-        //    order NOT saved, inventory NOT deducted, payment NOT charged
-        //    The database is left exactly as it was before this method was called!
+        from.setBalance(from.getBalance() - 500);
+        to.setBalance(to.getBalance() + 500);
     }
 }
 ```
 
-#### Common @Transactional Configuration Options
+No `save()` call is needed here if both accounts are managed entities in this transaction. JPA's dirty checking saves their changes when the transaction commits.
+
+**Remember:** `@Transactional` protects database work in the transaction. It cannot automatically undo an external action, such as a real payment sent to a payment gateway.
+
+#### 6.4.3 Useful options
 
 ```java
-@Service
-@RequiredArgsConstructor
-public class UserService {
-
-    // ── Read-Only Transaction (Performance Optimization) ─────────
-    // Use this for methods that ONLY read data — never modify it.
-    // Hibernate skips dirty checking (no snapshot comparison), making reads faster.
-    @Transactional(readOnly = true)
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-        // Hibernate knows not to check for changes → faster!
-    }
-
-    // ── Custom Rollback Rules ────────────────────────────────────
-    // By default, @Transactional only rolls back on RuntimeException (unchecked exceptions).
-    // Checked exceptions (like IOException) do NOT trigger rollback by default!
-    // Use rollbackFor to change this:
-    @Transactional(rollbackFor = Exception.class)   // Rollback on ALL exceptions (checked + unchecked)
-    public void importData() throws IOException { ... }
-
-    @Transactional(noRollbackFor = EmailException.class)  // Don't rollback if email fails
-    public void createUserAndSendWelcomeEmail() { ... }
-    // Even if the welcome email fails, the user is still saved.
-    // This is useful when a secondary action (email) shouldn't affect the primary action (user creation).
-
-    // ── Timeout ──────────────────────────────────────────────────
-    // If the transaction takes longer than this, it's rolled back.
-    // Protects against long-running queries holding database connections.
-    @Transactional(timeout = 30) // 30 seconds max
-    public void longRunningReport() { ... }
+@Transactional(readOnly = true)
+public List<User> getUsers() {
+    return userRepository.findAll();
 }
 ```
 
-> 📝 **Beginner Note — `readOnly = true` explained:**  
-> When you set `readOnly = true`, you're telling Spring and Hibernate: *"This method only reads data. I promise I won't modify anything."* This lets Hibernate skip dirty checking (the snapshot comparison), which makes reads noticeably faster, especially when loading many entities. **Always use `readOnly = true` on methods that don't modify data.**
-
-#### Propagation Types — How Transactions Interact
-
-When one `@Transactional` method calls another `@Transactional` method, **propagation** decides what happens. Should they share the same transaction? Should each get its own?
-
-> 🧠 **Analogy — Sharing a Taxi:**  
-> - **REQUIRED (default):** "If there's already a taxi (transaction), I'll share it. If not, I'll call a new one."
-> - **REQUIRES_NEW:** "I always call my own taxi, even if there's already one. The other taxi waits for me."
-> - **MANDATORY:** "I refuse to walk — there MUST be a taxi already. If not, I'll throw a tantrum (exception)."
-> - **NEVER:** "I refuse to take a taxi. If someone tries to put me in one, I'll throw a tantrum."
-> - **SUPPORTS:** "If there's a taxi, I'll ride along. If not, I'll walk — no problem either way."
+Use `readOnly = true` for methods that only read data. It tells Spring and the database/provider that the operation is read-only and may allow optimizations; it is not a security rule that guarantees writes are impossible.
 
 ```java
-// REQUIRED (default) — Most common. Join existing transaction, or start a new one.
-// 99% of the time, this is what you want.
-@Transactional(propagation = Propagation.REQUIRED)
-public void doWork() { ... }
-
-// REQUIRES_NEW — Always start a fresh transaction.
-// The outer transaction is PAUSED until this one finishes.
-// Use case: Audit logging that MUST be saved even if the main operation fails.
-@Transactional(propagation = Propagation.REQUIRES_NEW)
-public void writeAuditLog(String action) {
-    auditRepository.save(new AuditLog(action));
-    // This save is in its OWN transaction.
-    // Even if the calling method rolls back, this audit log is KEPT.
+@Transactional(rollbackFor = Exception.class)
+public void importData() throws Exception {
+    // database work
 }
-
-// NESTED — Run within a "savepoint" inside the existing transaction.
-// If this nested part fails, only the nested part rolls back — not the whole transaction.
-@Transactional(propagation = Propagation.NESTED)
-public void nestedWork() { ... }
-
-// SUPPORTS — Run in a transaction if one exists, otherwise run without one.
-@Transactional(propagation = Propagation.SUPPORTS)
-public void flexibleRead() { ... }
-
-// NOT_SUPPORTED — Pause any existing transaction and run without one.
-@Transactional(propagation = Propagation.NOT_SUPPORTED)
-public void nonTransactionalWork() { ... }
-
-// NEVER — Must NOT be called within a transaction. Throws exception if one exists.
-@Transactional(propagation = Propagation.NEVER)
-public void mustBeNonTransactional() { ... }
-
-// MANDATORY — Must be called within an existing transaction. Throws exception if none exists.
-@Transactional(propagation = Propagation.MANDATORY)
-public void requiresExistingTransaction() { ... }
 ```
 
-> 📝 **Beginner Note — Which propagation should I use?**  
-> For 99% of cases, stick with the default `REQUIRED`. Use `REQUIRES_NEW` only when you need an operation to succeed independently (like audit logs or notification records). The other types are rarely needed in typical applications.
+By default, checked exceptions (for example, `IOException`) do **not** trigger rollback. Use `rollbackFor` when checked exceptions should also cause rollback.
 
-> ⚠️ **Common Mistake — `@Transactional` on a `private` method doesn't work!**  
-> Spring implements `@Transactional` using a **proxy pattern**. When Spring creates a proxy, it wraps your bean and intercepts method calls. But it can only intercept **public** methods called from **outside** the class. Two things break:
-> 1. **Private methods:** The proxy can't override them → `@Transactional` is silently ignored.
-> 2. **Self-invocation (calling a `@Transactional` method from within the same class):** The call goes directly to `this`, bypassing the proxy → `@Transactional` is silently ignored.
->
-> ```java
-> @Service
-> public class UserService {
->
->     // ❌ BROKEN — private method, proxy can't intercept
->     @Transactional
->     private void doWork() { ... }
->
->     // ❌ BROKEN — self-invocation bypasses the proxy
->     public void outerMethod() {
->         this.innerMethod(); // Direct call → proxy is bypassed → no transaction!
->     }
->
->     @Transactional
->     public void innerMethod() { ... }
->
->     // ✅ FIX — inject the service into itself (self-injection)
->     @Autowired
->     private UserService self; // Spring injects the PROXY, not 'this'
->
->     public void outerMethodFixed() {
->         self.innerMethod(); // Goes through the proxy → transaction works!
->     }
-> }
-> ```
+```java
+@Transactional(noRollbackFor = EmailException.class)
+public void createUser() {
+    // database work
+}
+```
 
-> 💡 **Important to Remember — @Transactional Checklist:**
-> - ✅ Always on `public` methods
-> - ✅ Always on the **service layer** (not controllers, not repositories)
-> - ✅ Use `readOnly = true` for read-only methods
-> - ✅ Use `rollbackFor = Exception.class` if you throw checked exceptions
-> - ❌ Never on `private` methods
-> - ❌ Never rely on self-invocation to trigger transactions
+`noRollbackFor` tells Spring not to roll back for the specified exception. Use it only when that behavior is intended.
+
+```java
+@Transactional(timeout = 30)
+public void runReport() {
+    // database work
+}
+```
+
+`timeout = 30` sets a 30-second transaction timeout. The exact effect depends on the transaction manager and database.
+
+#### 6.4.4 Transaction propagation
+
+**Propagation** decides what happens when a transactional method calls another transactional method.
+
+| Type | Simple meaning |
+|---|---|
+| `REQUIRED` *(default)* | Join the current transaction, or start one if none exists. |
+| `REQUIRES_NEW` | Start a separate transaction; pause the outer one while it runs. |
+| `NESTED` | Use a savepoint inside the current transaction, when supported. |
+| `SUPPORTS` | Join a transaction if one exists; otherwise run without one. |
+| `NOT_SUPPORTED` | Run without a transaction; pause the current one if needed. |
+| `MANDATORY` | Must already have a transaction; otherwise, throw an exception. |
+| `NEVER` | Must not have a transaction; otherwise, throw an exception. |
+
+**Which should you learn first?**
+
+- Use `REQUIRED` for most everyday service methods.
+- Use `REQUIRES_NEW` only when an operation must commit or roll back separately, such as a separate audit record. This requires suitable transaction configuration.
+- The other types are less common in beginner-level application code.
+
+#### 6.4.5 Common mistakes
+
+- **Forgetting the service layer:** Usually put `@Transactional` on service methods that perform a group of database actions.
+- **Calling a method from the same class:** In Spring's usual proxy-based setup, `this.someMethod()` bypasses the proxy, so the called method's `@Transactional` settings may not apply.
+- **Using it on a private method:** Proxy-based transaction handling cannot intercept private method calls in the usual setup.
+- **Expecting every exception to roll back:** By default, rollback happens for `RuntimeException` and `Error`, not checked exceptions.
+- **Assuming external calls roll back:** A database rollback cannot automatically reverse an email, an external API call, or a payment already processed by another system.
+
+#### 6.4.6 Quick revision
+
+- `@Transactional` = Spring manages a database transaction for a method.
+- **Commit** = keep the changes; **rollback** = undo the database changes.
+- Use it for methods that perform multiple related database operations.
+- `readOnly = true` is for read operations.
+- `REQUIRED` is the default and usually the first choice.
+- `rollbackFor = Exception.class` includes checked exceptions in rollback rules.
+- Put transaction boundaries on service methods and ensure calls go through Spring's proxy.
+
+#### 6.4.7 Interview answer
+
+“`@Transactional` is a Spring annotation that manages a database transaction. If the method succeeds, the transaction commits. If an unchecked exception occurs, Spring rolls back the database changes by default. It is commonly used in the service layer when several database operations must succeed or fail together.”
 
 ---
 
-### 6.5 Optimistic vs Pessimistic Locking
+### 6.5 JPA Locking: Optimistic vs Pessimistic
 
-#### What is Locking?
+#### 6.5.1 What is locking?
 
-When two users try to modify the **same database record** at the **same time**, you have a **concurrency conflict**. Without any protection, one user's changes silently overwrite the other's — this is called the **lost update problem**. Locking prevents this.
+Locking helps prevent problems when **two users change the same database record at the same time**.
 
-#### Why do you need it?
+Example: Two users see that a product has 10 items in stock. Both try to buy 7. Without protection, the stock could be updated incorrectly.
 
-Imagine two customer support agents both open the same customer profile. Agent A changes the phone number. Agent B changes the email. They both click "Save" at the same time. Without locking, whoever saves last wins — and the other agent's change is silently lost. Locking detects or prevents this conflict.
+There are two common approaches:
 
-> 🧠 **Analogy — Editing a Shared Document:**  
-> - **Optimistic Locking = Google Docs with conflict detection:** Everyone can edit freely. If two people edit the same paragraph, the system shows a warning: *"This paragraph was changed by someone else. Please review."* Most of the time, there's no conflict, so this approach is fast and non-blocking.
-> - **Pessimistic Locking = Locking a file on a shared drive:** When you open the file, it's locked — nobody else can open it until you close it. Guarantees no conflicts, but other people have to wait. If you forget to close it (or your computer crashes), the file stays locked.
+- **Optimistic locking:** Let users work, then check for a conflict when saving.
+- **Pessimistic locking:** Lock the database row while it is being changed, so competing updates must wait.
 
----
+#### 6.5.2 Optimistic Locking
 
-#### Optimistic Locking (Recommended for Most Applications)
+**Idea:** Assume conflicts are rare. Check whether someone else changed the record before saving.
 
-**How it works:** Each entity has a **version number**. When you read the entity, you read its version. When you save, Hibernate checks: *"Is the version in the database still the same as when I read it?"* If yes, the save succeeds and the version increments. If no (someone else changed it), Hibernate throws an exception.
+##### How it works
 
-**Step-by-step: What happens behind the scenes:**
+1. User A and User B both read the product at version `1`.
+2. User A updates it. Hibernate saves the change and increases the version to `2`.
+3. User B tries to save using the old version `1`.
+4. The version no longer matches, so the update fails instead of overwriting User A's change.
 
-1. User A reads Product (id=1, stock=100, **version=1**)
-2. User B reads Product (id=1, stock=100, **version=1**)
-3. User A changes stock to 90 and saves
-   - Hibernate runs: `UPDATE products SET stock=90, version=2 WHERE id=1 AND version=1`
-   - 1 row updated ✅ → version is now **2** in the database
-4. User B changes stock to 80 and saves
-   - Hibernate runs: `UPDATE products SET stock=80, version=2 WHERE id=1 AND version=1`
-   - 0 rows updated ❌ → version is no longer 1 → **`OptimisticLockException`!**
-5. User B's code catches the exception and can retry with fresh data
+##### Example
+
+Add `@Version` to the entity. Hibernate manages this field; do not change it yourself.
 
 ```java
 @Entity
@@ -2298,81 +2225,37 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
     private int stock;
 
-    @Version  // ← This is the magic annotation!
+    @Version
     private int version;
-    // Hibernate manages this field automatically:
-    // - Starts at 0 when the entity is first saved
-    // - Increments by 1 on every successful UPDATE
-    // - Every UPDATE includes "AND version = ?" in its WHERE clause
-    // - If the version doesn't match, the update fails → exception
-    // You should NEVER set this field manually!
 }
 ```
 
-Here's how to handle the conflict in your service:
+**Remember:** `@Version` lets Hibernate detect if another transaction changed the same record.
 
-```java
-@Service
-@RequiredArgsConstructor
-public class ProductService {
+When a conflict happens, the application can ask the user to refresh and try again, or safely retry the operation.
 
-    private final ProductRepository productRepository;
+**Use it when:** Conflicts are uncommon. It is a good starting choice for most applications.
 
-    @Transactional
-    public Product updateStock(Long productId, int delta) {
-        try {
-            Product product = productRepository.findById(productId).orElseThrow();
-            product.setStock(product.getStock() + delta);
-            return productRepository.save(product);
-            // If another user modified the product between our findById and save,
-            // the version won't match → OptimisticLockingFailureException!
-        } catch (OptimisticLockingFailureException ex) {
-            // Option 1: Retry the operation with fresh data
-            // Option 2: Return a 409 Conflict response to the client
-            throw new ConflictException("Product was modified by another user. Please refresh and try again.");
-        }
-    }
-}
-```
+#### 6.5.3 Pessimistic Locking
 
-> 📝 **Beginner Note — When to use Optimistic Locking:**  
-> Use it when **conflicts are rare** — which is most applications. If 100 users read a product page but only 1 updates it, optimistic locking is perfect: 99 reads have zero overhead, and the rare conflict is handled gracefully. No database rows are locked, so there's no waiting.
+**Idea:** Lock the database row before changing it. Other transactions trying to make conflicting changes must wait until the lock is released.
 
----
+This is useful when several requests may update the same record at the same time, such as product stock.
 
-#### Pessimistic Locking (For High-Contention Scenarios)
-
-**How it works:** When you read a row, you **lock it in the database**. Other transactions that try to read or write that row are **blocked** (forced to wait) until your transaction finishes and releases the lock.
-
-> 🧠 **Analogy — A Fitting Room:**  
-> Think of a database row as a **fitting room** in a clothing store:
-> - **PESSIMISTIC_WRITE** = You go into the fitting room and **lock the door**. Nobody else can enter or even peek. They wait in line until you're done.
-> - **PESSIMISTIC_READ** = The fitting room has a **window**. Others can look (read), but nobody can enter (write) until you leave.
+##### Repository example
 
 ```java
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    // PESSIMISTIC_WRITE — Lock the row. Nobody else can read or write until this transaction ends.
-    // Use for: critical updates where you MUST prevent any concurrent access.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
-    // Generated SQL: SELECT * FROM products WHERE id = ? FOR UPDATE
-    // The "FOR UPDATE" clause tells the database to lock this row.
-
-    // PESSIMISTIC_READ — Others can read, but cannot write until this transaction ends.
-    // Use for: scenarios where you need consistent reads but don't want to block other readers.
-    @Lock(LockModeType.PESSIMISTIC_READ)
-    @Query("SELECT p FROM Product p WHERE p.id = :id")
-    Optional<Product> findByIdWithReadLock(@Param("id") Long id);
-    // Generated SQL: SELECT * FROM products WHERE id = ? FOR SHARE (or LOCK IN SHARE MODE)
 }
 ```
 
-**Using pessimistic locking in a service:**
+##### Service example
 
 ```java
 @Service
@@ -2382,570 +2265,254 @@ public class InventoryService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public void decreaseStock(Long productId, int quantity) {
-        // This query LOCKS the row — no other transaction can modify it until we commit
-        Product product = productRepository.findByIdForUpdate(productId)
-                .orElseThrow(() -> new NotFoundException("Product not found"));
+    public void decreaseStock(Long id, int quantity) {
+        Product product = productRepository.findByIdForUpdate(id)
+                .orElseThrow();
 
         if (product.getStock() < quantity) {
-            throw new InsufficientStockException("Not enough stock");
+            throw new IllegalArgumentException("Not enough stock");
         }
 
         product.setStock(product.getStock() - quantity);
-        // Transaction commits → lock is released → other transactions can proceed
     }
 }
 ```
 
-> ⚠️ **Common Mistake — Deadlocks with pessimistic locking:**  
-> If Transaction A locks Row 1 and waits for Row 2, while Transaction B locks Row 2 and waits for Row 1, **neither can proceed** — this is a **deadlock**. The database detects it and kills one of the transactions. To prevent deadlocks, always lock rows **in the same order** across your application (e.g., always lock the lower ID first).
+The row stays locked during the transaction. When the transaction finishes, the database releases the lock.
 
----
+**Remember:** `PESSIMISTIC_WRITE` is used when you need to protect a row from competing updates. Exact behavior for other reads depends on the database.
 
-#### Optimistic vs Pessimistic — Which Should You Use?
+#### 6.5.4 Quick Comparison
 
-| | Optimistic Locking | Pessimistic Locking |
+| | Optimistic locking | Pessimistic locking |
 |---|---|---|
-| **How it works** | Check version on save | Lock row on read |
-| **Blocking?** | No — other users aren't blocked | Yes — other users wait |
-| **Performance** | Better (no lock overhead) | Worse (locks reduce throughput) |
-| **Conflict handling** | Exception on conflict → retry | No conflicts (others wait) |
-| **Risk** | Retry overhead if conflicts are frequent | Deadlocks, reduced throughput |
-| **Best for** | **Most applications** — read-heavy, low contention | Financial systems, inventory — high contention on specific rows |
-| **Setup** | Add `@Version` field | Use `@Lock` on queries |
+| Main idea | Check the version when saving | Lock the row before changing it |
+| Do other updates wait? | Usually no; a conflicting update fails | Yes; conflicting updates usually wait |
+| Best for | Occasional conflicts | Frequent conflicts on the same record |
+| Main downside | May need a retry | Can cause waiting or deadlocks |
+| How to use it | Add `@Version` | Use `@Lock(LockModeType.PESSIMISTIC_WRITE)` |
 
-> 💡 **Important to Remember:**  
-> - **Start with Optimistic Locking.** It's simpler, faster, and sufficient for 90% of applications.
-> - Switch to **Pessimistic Locking** only for specific high-contention operations (like deducting inventory, processing payments) — and only on the specific queries that need it, not everywhere.
-> - You can use **both** in the same application: optimistic for most entities, pessimistic for critical sections.
+#### 6.5.5 Important points
 
----
+- Start with **optimistic locking** for most cases.
+- Use **pessimistic locking** only where competing updates are common or must be carefully controlled.
+- Keep pessimistic-lock transactions short so other requests do not wait too long.
+- Pessimistic locks can contribute to a **deadlock** if transactions lock rows in different orders. Lock rows in a consistent order where possible.
+- Both approaches can be used in the same application.
 
-### 6.6 Caching
+#### 6.5.6 Interview answer
 
-#### What is Caching?
+**Optimistic locking** uses `@Version` to detect whether another transaction changed a record. If the version has changed, the update fails. **Pessimistic locking** locks the database row so competing updates have to wait. I would usually start with optimistic locking and use pessimistic locking for specific high-contention operations, such as updating inventory.
 
-Caching stores frequently accessed data **in memory** so that repeated requests don't hit the database every time. Instead of running a SQL query for every request, your app checks the cache first — if the data is there, it returns instantly.
+### 6.6 Caching in JPA and Spring Boot
 
-#### Why does caching matter?
+#### 6.6.1 What Is Caching?
 
-Database queries involve network round-trips, SQL parsing, disk I/O, and result transmission. Even a fast query takes 1–10ms. A cache hit takes microseconds. For data that doesn't change often (product categories, country lists, user profiles), caching can make your API **10–100x faster** and dramatically reduce database load.
+**Caching means keeping frequently used data in memory so the application can return it faster instead of querying the database every time.**
 
-#### What problem does it solve?
+**Example:** The list of countries rarely changes. Fetch it once, cache it, and reuse it for later requests.
 
-If your app serves 1,000 requests/second and each one queries the same "list of categories" from the database, that's 1,000 identical queries per second — wasteful. With caching, the first request queries the database and stores the result. The next 999 requests get the result from the cache instantly.
+**Why use it?**
+- Faster responses
+- Fewer database queries
+- Less load on the database
 
-> 🧠 **Analogy — A Library's Front Desk:**  
-> Imagine a library where every book request requires walking to the back warehouse (database) and finding the book.
-> - **No cache:** Every visitor waits while the librarian walks to the warehouse. Even if 50 people ask for the same bestseller, the librarian makes 50 trips.
-> - **First-Level Cache (desk drawer):** The librarian keeps the last few requested books in a desk drawer. If you ask for the same book again *during the same visit*, it's right there. When you leave (transaction ends), the drawer is cleared.
-> - **Second-Level Cache (display shelf):** The library puts popular books on a shelf near the entrance. ANY visitor can grab them — even across different visits. The shelf is restocked periodically or when books are updated.
+Cache data that is read often and does not change too frequently. Remember that cached data can become outdated, so it must be refreshed or removed when needed.
 
 ---
 
-#### First-Level Cache (Always On — Per-Transaction)
+#### 6.6.2 Types of Cache
 
-The first-level cache (also called the **session cache** or **persistence context cache**) is **built into Hibernate** and is always active. You don't configure it — it just works.
+| Cache | Where it works | Setup needed? | Simple meaning |
+|---|---|---|---|
+| **First-level cache** | One Hibernate persistence context | No | Reuses entities already loaded in the current context |
+| **Second-level cache** | Shared across persistence contexts | Yes | Reuses cached entities across transactions |
+| **Spring cache** | At the method/service level | Enable caching and choose a cache provider | Stores the result of a method call |
 
-**How it works:**
-- Each `@Transactional` method gets its own first-level cache
-- When you load an entity by ID, Hibernate stores it in this cache
-- If you load the **same entity by ID again** within the same transaction, Hibernate returns the cached instance — no SQL query
-- The cache is cleared when the transaction ends
+#### 6.6.3 First-Level Cache
+
+Hibernate provides this cache automatically. It works inside the current persistence context, usually during a transaction.
+
+When an entity is loaded by its ID, Hibernate keeps track of it. Asking for the same entity by ID again in the same context usually does not run another SQL query.
 
 ```java
 @Transactional
-public void demonstrateFirstLevelCache() {
-    // Query 1: Hits the database
-    User u1 = userRepository.findById(1L).get();
-    // SQL executed: SELECT * FROM users WHERE id = 1
+public void checkCache() {
+    User first = userRepository.findById(1L).orElseThrow();  // Reads from DB
+    User second = userRepository.findById(1L).orElseThrow(); // Reuses cached entity
 
-    // Query 2: Does NOT hit the database — returns cached instance!
-    User u2 = userRepository.findById(1L).get();
-    // No SQL executed! u2 comes from the first-level cache.
-
-    // They are the EXACT SAME Java object in memory:
-    System.out.println(u1 == u2); // true — same reference!
-
-    // This means any changes you make to u1 are also visible through u2
-    // (because they are literally the same object)
+    System.out.println(first == second); // true
 }
-// When this method returns, the first-level cache is cleared.
-// A new @Transactional method starts with an empty cache.
 ```
 
-> 📝 **Beginner Note — First-level cache only works with `findById()`:**  
-> If you run the same JPQL query twice (e.g., `findByEmail("alice@example.com")`), Hibernate runs the SQL **both times**. The first-level cache only caches by **entity ID** — it doesn't cache query results. For query-level caching, you need the second-level cache (below).
-
-> 📝 **Beginner Note — First-level cache scope:**  
-> The first-level cache lives only within a single `@Transactional` method (or more precisely, within a single Hibernate `Session`). Two different transactions have completely separate caches. If User A loads entity #1 and User B loads entity #1, each gets their own database query — they don't share.
+**Remember:** First-level cache is automatic, but it does not generally cache the results of queries such as `findByEmail()`.
 
 ---
 
-#### Second-Level Cache (Cross-Transaction — Needs Configuration)
+#### 6.6.4 Second-Level Cache
 
-The second-level cache (L2 cache) is a **shared, application-wide cache** that survives across transactions. If User A loads a `Category` entity, and 10 seconds later User B loads the same `Category`, User B gets it from the L2 cache — no database query.
+The second-level cache is optional. It can share cached entities between different persistence contexts. You must configure a supported cache provider and mark the entities you want to cache.
 
-**Step-by-step setup:**
+Use it for data that is read often and changes rarely, such as categories or reference data.
 
-**Step 1: Add cache dependencies to your `pom.xml`**
+**Remember:** It needs extra setup. Do not enable it everywhere without measuring whether it helps.
 
-```xml
-<!-- The Hibernate JCache integration -->
-<dependency>
-    <groupId>org.hibernate.orm</groupId>
-    <artifactId>hibernate-jcache</artifactId>
-</dependency>
-
-<!-- Caffeine — a fast, in-memory cache library by Google -->
-<dependency>
-    <groupId>com.github.ben-manes.caffeine</groupId>
-    <artifactId>caffeine</artifactId>
-</dependency>
-```
-
-**Step 2: Enable the second-level cache in `application.properties`**
-
-```properties
-# Turn on the second-level cache
-spring.jpa.properties.hibernate.cache.use_second_level_cache=true
-
-# Tell Hibernate which cache provider to use (JCache + Caffeine)
-spring.jpa.properties.hibernate.cache.region.factory_class=org.hibernate.cache.jcache.internal.JCacheRegionFactory
-spring.jpa.properties.javax.cache.provider=com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider
-```
-
-**Step 3: Mark which entities should be cached**
-
-Not every entity should be cached — only entities that are **read frequently** and **change rarely**.
-
-```java
-@Entity
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE) // ← Enable L2 caching for this entity
-public class Category {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String name;
-
-    private boolean active;
-}
-// Now, when any transaction loads a Category by ID, it's stored in the L2 cache.
-// The next transaction that loads the same Category gets it from cache — no SQL!
-```
-
-**Step 4 (Optional): Enable query caching for specific queries**
-
-By default, the L2 cache only caches entities loaded by ID. To cache the results of specific queries, enable the query cache:
-
-```properties
-# Enable the query cache (in addition to entity cache)
-spring.jpa.properties.hibernate.cache.use_query_cache=true
-```
-
-```java
-// Mark specific queries as cacheable
-@Query("SELECT c FROM Category c WHERE c.active = true")
-@QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
-List<Category> findActiveCategories();
-// First call: runs SQL, stores results in query cache.
-// Second call: returns results from cache — no SQL!
-// Cache is invalidated when any Category is inserted, updated, or deleted.
-```
-
-#### Cache Concurrency Strategy — Which One to Choose?
-
-The `CacheConcurrencyStrategy` controls how the cache handles concurrent reads and writes:
-
-| Strategy | Description | Use When | Example |
-|---|---|---|---|
-| `READ_ONLY` | Cache never expects data to change. Fastest. | Reference data that **never** changes after creation | Countries, currencies, languages |
-| `NONSTRICT_READ_WRITE` | Cache may briefly show stale data after an update. Good enough for most cases. | Data that changes **rarely**, and brief staleness is OK | Product categories, user preferences |
-| `READ_WRITE` | Cache is updated synchronously with the database. Consistent but slightly slower. | Data that changes **moderately** and needs to be accurate | Product details, user profiles |
-| `TRANSACTIONAL` | Cache participates in the database transaction (uses JTA). Strongest consistency but slowest. | Financial data, pricing — absolutely **must** be consistent | Account balances (rarely used in practice) |
-
-> 📝 **Beginner Note — When NOT to use the second-level cache:**  
-> - Don't cache entities that change **very frequently** (like real-time counters, chat messages) — the cache will be invalidated constantly, making it useless.
-> - Don't cache entities with **huge data** (like entities with large TEXT or BLOB fields) — they'll eat up memory.
-> - Don't enable caching everywhere "just in case" — it adds complexity and can cause **stale data bugs** that are hard to debug.
-> - **Start without caching.** Only add it when you've identified a performance bottleneck through actual measurement.
-
-> ⚠️ **Common Mistake — Forgetting to invalidate the cache:**  
-> If you update data directly with native SQL or a `@Modifying` query (bypassing Hibernate), the L2 cache won't know about the change — it will keep serving **stale (outdated) data**. Always invalidate or evict the cache after direct SQL updates.
-
-> 💡 **Important to Remember — Cache Summary:**
-> | Cache | Scope | Lifetime | Config Needed | Caches |
-> |---|---|---|---|---|
-> | **First-Level** | Single transaction | Transaction duration | None (always on) | Entities by ID |
-> | **Second-Level** | Entire application | Until evicted/expired | Yes (dependency + config + annotations) | Entities by ID + query results |
+> Exact setup depends on your Hibernate version and chosen cache provider. Learn the idea first; configure it only when your project needs it.
 
 ---
 
-#### Spring Boot Application-Level Caching (@Cacheable, @CachePut, @CacheEvict)
+#### 6.6.5 Spring Boot Cache — Most Useful to Know
 
-Everything above (first-level and second-level cache) is **Hibernate's** caching — it works at the JPA/entity level. But Spring Boot also provides its own **application-level caching framework** that works on **any method** in your application — not just database queries. This is what most developers mean when they say "caching in Spring Boot."
+Spring caching can store the result of a method, such as a service method that fetches roles or categories.
 
-#### What is Spring Boot Caching?
-
-Spring Boot caching uses annotations to **automatically store and retrieve method return values** in a cache. The caller never knows whether the data came from the actual method execution, the database, or the cache — it's completely transparent.
-
-> 🧠 **Analogy — A Sticky Note on Your Monitor:**  
-> Imagine you keep asking your colleague the same question every hour: "What's the WiFi password?" Instead of walking to their desk every time, you write the answer on a sticky note on your monitor. Next time you need it, you just look at the sticky note. That sticky note is your cache. Spring Boot does this automatically for your methods — the first call executes the method and "writes the sticky note," and all subsequent calls with the same input just "read the sticky note."
-
-#### Why Do We Need Application-Level Caching?
-
-- **Improve Performance** — Avoid repeated database or API calls; get faster response times
-- **Reduce Load on Backend** — Fewer DB queries; less stress on microservices
-- **Better User Experience** — Pages load faster; APIs respond quicker
-
-#### Step 1: Enable Caching in Spring Boot
-
-First, add the caching starter dependency and enable caching in your main application class:
+##### Step 1: Add the dependency
 
 ```xml
-<!-- pom.xml -->
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-cache</artifactId>
 </dependency>
 ```
 
+##### Step 2: Enable caching
+
 ```java
-@EnableCaching          // ← This annotation turns on Spring's caching infrastructure
 @SpringBootApplication
-public class MyApplication { ... }
+@EnableCaching
+public class MyApplication {
+}
 ```
 
-> 📝 **Beginner Note:** Without `@EnableCaching`, all caching annotations (`@Cacheable`, `@CachePut`, `@CacheEvict`) are **silently ignored**. Your app still works, but nothing is cached. This is a common "why isn't my cache working?" moment.
+##### Step 3: Use the caching annotations
 
-#### Step 2: The Three Core Caching Annotations
-
-Spring provides three annotations that cover all caching operations. Think of them as **read**, **update**, and **delete** for your cache:
-
-| Annotation | Purpose | When to Use |
+| Annotation | Simple meaning | Common use |
 |---|---|---|
-| `@Cacheable` | **Read from cache** if present, else execute the method and cache the result for future calls | Read-only or lookup methods (`findById`, `findByName`) |
-| `@CachePut` | **Always execute** the method AND **update the cache** with the new result | Save/update methods — keeps cache in sync with DB |
-| `@CacheEvict` | **Remove** an entry from the cache (or clear the entire cache) | Delete methods — removes stale data from cache |
+| `@Cacheable` | Return cached data if available; otherwise run the method and cache its result | Read methods |
+| `@CachePut` | Always run the method, then update the cache with its result | Save/update methods |
+| `@CacheEvict` | Remove data from the cache | Delete or invalidate cached data |
 
-> 🧠 **Analogy — A Phone Book:**  
-> - `@Cacheable` = Look up a contact in your phone book. If it's there, use it. If not, call the person, get the number, and write it in the phone book for next time.
-> - `@CachePut` = Someone changed their phone number. Update the entry in your phone book.
-> - `@CacheEvict` = Someone moved away. Remove their entry from the phone book so you don't call a wrong number.
-
----
-
-#### @Cacheable — Cache Method Results on First Call
-
-`@Cacheable` is the most commonly used caching annotation. It works like this:
-1. **First call** with a given input → method executes normally, result is stored in cache
-2. **Next call** with the **same input** → method is **skipped entirely**, cached result is returned instantly
-
-**Example 1: Cache an expensive calculation**
+##### Example: `@Cacheable`
 
 ```java
 @Service
-public class MathService {
+public class RoleService {
 
-    @Cacheable("piDecimals")  // Cache name = "piDecimals"
-    public int computePiDecimal(int precision) {
-        // This is an expensive calculation that takes several seconds...
-        // On the first call with precision=100, the result is computed and cached.
-        // On the second call with precision=100, the cached result is returned instantly!
-        // A call with precision=200 is a DIFFERENT key → computed fresh and cached separately.
-        return expensiveComputation(precision);
+    @Cacheable("roles")
+    public Role getRole(String name) {
+        return roleRepository.findByName(name).orElseThrow();
     }
 }
 ```
 
-**Example 2: Cache static database lookups (most common real-world use case)**
+**How it works:**
+1. First call for `ADMIN`: the method runs and the result is cached.
+2. Next call for `ADMIN`: Spring returns the cached result, so the method is skipped.
+3. A call for `USER` uses a different cache key and runs separately.
 
-Reference tables like roles, countries, and categories rarely change. Instead of hitting the DB every time, cache them:
+##### Example: Update and remove cached data
 
 ```java
-public interface RoleRepository extends JpaRepository<Role, Long> {
+@CachePut(value = "roles", key = "#role.name")
+public Role updateRole(Role role) {
+    return roleRepository.save(role);
+}
 
-    // ✅ Caches the role by name on first fetch
-    // Cache name = "roles", cache key = the 'name' parameter value
-    @Cacheable("roles")
-    Optional<Role> findRoleByName(String name);
-    // First call: roleRepository.findRoleByName("ROLE_JOB_SEEKER") → SQL query → result cached
-    // Second call: roleRepository.findRoleByName("ROLE_JOB_SEEKER") → NO SQL! Returns from cache
-    // Third call: roleRepository.findRoleByName("ROLE_ADMIN") → different key → SQL query → cached
+@CacheEvict(value = "roles", key = "#name")
+public void deleteRole(String name) {
+    roleRepository.deleteByName(name);
 }
 ```
+
+**Remember:**
+- `@Cacheable` — reuse a result.
+- `@CachePut` — run the method and refresh the cached result.
+- `@CacheEvict` — remove a cached result.
+- Do not use `@Cacheable` on a method that must always save or update data, because a cache hit can skip the method.
 
 ---
 
-#### @CachePut — Always Execute and Update Cache
+#### 6.6.6 Cache Keys
 
-Unlike `@Cacheable` (which skips the method if cache has data), `@CachePut` **always executes the method** and **updates the cache** with the fresh result. Use it when you're saving or updating data and want the cache to reflect the change.
+A **cache key** identifies a stored result.
 
-```java
-public interface RoleRepository extends JpaRepository<Role, Long> {
-
-    // 🔄 Updates cache when a role is saved/updated
-    // The method always runs (INSERT/UPDATE SQL), AND the cache is updated with the result
-    @CachePut(value = "roles", key = "#role.name")
-    Role save(Role role);
-    // key = "#role.name" means: use the role's name field as the cache key
-    // So saving a role with name="ROLE_ADMIN" updates the "roles" cache entry for "ROLE_ADMIN"
-}
-```
-
-> 📝 **Beginner Note — `@Cacheable` vs `@CachePut`:**
-> - `@Cacheable` = "Don't run the method if the cache already has the answer." → For **reads**
-> - `@CachePut` = "Always run the method, then update the cache with the new answer." → For **writes**
-> - **Never use `@Cacheable` on a save/update method!** It would skip the save operation if the cache already has data — meaning your data wouldn't actually be saved to the database!
-
----
-
-#### @CacheEvict — Remove Stale Data from Cache
-
-When you delete data from the database, you should also remove it from the cache. Otherwise, the cache serves **stale (outdated) data** that no longer exists in the DB.
+By default, Spring builds the key from the method arguments. Different arguments usually mean different cache entries.
 
 ```java
-public interface RoleRepository extends JpaRepository<Role, Long> {
-
-    // ✅ Caches the role by name on first fetch
-    @Cacheable("roles")
-    Optional<Role> findRoleByName(String name);
-
-    // 🔄 Updates cache when role is saved/updated
-    @CachePut(value = "roles", key = "#role.name")
-    Role save(Role role);
-
-    // ❌ Evicts (removes) a specific role from cache when deleted by name
-    @CacheEvict(value = "roles", key = "#name")
-    void deleteRoleByName(String name);
-    // After this runs, the cache entry for that role name is removed.
-    // Next call to findRoleByName() for this name will hit the DB again.
-
-    // 🚫 Optional: Clear ALL entries from the "roles" cache
-    @CacheEvict(value = "roles", allEntries = true)
-    void deleteAll();  // Only if appropriate — this wipes the entire "roles" cache
-}
-```
-
-> 💡 **Important to Remember — Tips for Effective Caching:**
-> - Use `@Cacheable` on **read-only or static lookup methods**
-> - Use `@CachePut` when **updating records** and you want to sync the cache
-> - Use `@CacheEvict` when **deleting or modifying** cached data
-> - **Never use `@Cacheable` on write/update operations** — it would skip the actual write!
-
----
-
-#### How Does Spring Decide the Cache Key?
-
-When you use `@Cacheable("users")`, Spring needs to know: *"Under what key should I store and retrieve this data?"* Spring follows these rules automatically:
-
-**Case 1: Method has one parameter → parameter value IS the key**
-
-```java
-@Cacheable("users")
-public User getUserById(Long id) {
-    // ...
-}
-// getUserById(1) → cache key = 1
-// getUserById(2) → cache key = 2
-// Each unique parameter value creates a separate cache entry
-```
-
-**Case 2: Method has multiple parameters → combination of all parameters is the key**
-
-```java
-@Cacheable("users")
-public User getUser(String email, String role) {
-    // ...
-}
-// getUser("a@x.com", "ADMIN") → cache key = ("a@x.com", "ADMIN")
-// getUser("a@x.com", "USER")  → cache key = ("a@x.com", "USER") ← DIFFERENT entry!
-// Same email but different role = different cache entry
-```
-
-**Case 3: Method has NO parameters → Spring uses `SimpleKey.EMPTY`**
-
-```java
-@Cacheable("roles")
-public List<Role> getAllRoles() {
-    // ...
-}
-// There's only ONE cache entry for this method (since there are no parameters).
-// Method executes only once. All subsequent calls return the cached list.
-```
-
-> 📝 **Beginner Note — How Spring creates the key internally:**  
-> Spring uses `SimpleKeyGenerator` behind the scenes:
-> - **0 params** → `SimpleKey.EMPTY` (single cache entry for the method)
-> - **1 param** → the parameter itself (e.g., `Long id = 1` → key is `1`)
-> - **Multiple params** → `SimpleKey(param1, param2, ...)` (composite key)
->
-> You normally don't see this, but it's good to know when debugging cache misses.
-
----
-
-#### Custom Cache Keys — Using the `key` Attribute and SpEL
-
-Sometimes the default key (method parameters) isn't what you want. You can control the cache key manually using **SpEL (Spring Expression Language)**:
-
-```java
-// Explicit key using a method parameter
 @Cacheable(value = "users", key = "#id")
-public User getUserById(Long id) {
-    // ...
+public User getUser(Long id) {
+    return userRepository.findById(id).orElseThrow();
 }
-
-// Key using a field of an object parameter
-@Cacheable(value = "users", key = "#user.email")
-public User getUser(User user) {
-    // ...
-}
-// Uses user.getEmail() as the cache key — much more reliable than the full User object
 ```
 
-**Common SpEL expressions for cache keys:**
+Here, `getUser(1L)` and `getUser(2L)` use different cache entries.
+
+Common key expressions:
 
 | Expression | Meaning |
 |---|---|
-| `#id` | Method parameter named `id` |
-| `#email` | Method parameter named `email` |
-| `#user.email` | The `email` field of the `user` parameter |
-| `#user.id` | The `id` field of the `user` parameter |
-| `#root.methodName` | Name of the method being called |
-| `#root.args[0]` | First argument passed to the method |
+| `#id` | The `id` method argument |
+| `#email` | The `email` method argument |
+| `#user.id` | The ID field of the `user` argument |
 
-> ⚠️ **Common Mistake — Bad key choices:**  
-> ```java
-> // ❌ BAD — Using a full object as cache key
-> @Cacheable("users")
-> public User getUser(User user) { ... }
-> // The User object's identity in memory may differ between calls,
-> // causing cache misses even when the data is the same!
-> 
-> // ✅ GOOD — Use a stable, unique field as the key
-> @Cacheable(value = "users", key = "#user.id")
-> public User getUser(User user) { ... }
-> ```
-
-> ⚠️ **Common Mistakes with Caching:**
-> - **Caching entities with mutable fields** — if cached objects are modified, the cache serves wrong data
-> - **Using full objects as cache keys** — use IDs or unique fields instead
-> - **Forgetting that same method + different params = different cache entries** — each unique parameter combo gets its own entry
+Use stable values such as IDs or unique names as keys.
 
 ---
 
-#### Spring Boot Caching with TTL (Time-To-Live) Configuration
+#### 6.6.7 Cache Expiry (TTL)
 
-By default, Spring Boot uses `ConcurrentMapCacheManager` — a simple in-memory cache that **never expires entries**. This means cached data stays forever until the app restarts or you explicitly evict it. For production use, you need a real cache provider that supports **TTL (Time-To-Live)** — automatic expiration of cache entries after a set time.
+**TTL (Time To Live)** is how long cached data remains valid before it expires.
 
-#### What is TTL?
+Example: If a job listing is cached for 10 minutes, after it expires the next request can fetch fresh data and cache it again.
 
-TTL (Time-To-Live) is the maximum amount of time a cache entry is valid. After the TTL expires, the entry is automatically removed, and the next request fetches fresh data from the database.
-
-> 🧠 **Analogy — Expiration Dates on Food:**  
-> Think of cache entries like items in your fridge. Milk expires after 7 days (`expireAfterWrite = 7 days`). After that, even though the milk is still in the fridge (cache), you throw it away and buy fresh milk (fetch from DB). Without expiration dates (no TTL), you might drink month-old milk (serve stale data).
-
-#### Setting Up Caffeine Cache with TTL
-
-**Caffeine** is a high-performance, in-memory caching library by the makers of Google Guava. It's the **recommended cache provider** for Spring Boot applications that run on a single server.
-
-**Step 1: Add the Caffeine dependency**
+For a simple in-memory cache with Caffeine, add the dependency:
 
 ```xml
-<!-- pom.xml -->
 <dependency>
     <groupId>com.github.ben-manes.caffeine</groupId>
     <artifactId>caffeine</artifactId>
 </dependency>
 ```
 
-**Step 2: Configure cache names, TTL, and max size**
+Example configuration in `application.properties`:
 
-You can configure Caffeine via a Java `@Configuration` class for fine-grained control over each cache:
-
-```java
-import com.github.benmanes.caffeine.cache.Caffeine;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.cache.support.SimpleCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-@Configuration
-public class CaffeineCacheConfig {
-
-    @Bean
-    public CacheManager caffeineCacheManager() {
-
-        // Each CaffeineCache has its own TTL and size limit
-        // This gives you fine-grained control per cache region
-
-        CaffeineCache companiesCache = new CaffeineCache("companies", Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)  // Entries expire 10 mins after being written
-                .maximumSize(500)                         // Hold max 500 entries in memory
-                .build());
-
-        CaffeineCache jobsCache = new CaffeineCache("jobs", Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .maximumSize(5000)
-                .build());
-
-        CaffeineCache rolesCache = new CaffeineCache("roles", Caffeine.newBuilder()
-                .expireAfterWrite(1, TimeUnit.DAYS)      // Roles rarely change — cache for 1 day
-                .maximumSize(100)
-                .build());
-
-        SimpleCacheManager manager = new SimpleCacheManager();
-        manager.setCaches(Arrays.asList(companiesCache, jobsCache, rolesCache));
-        return manager;
-    }
-}
+```properties
+spring.cache.type=caffeine
+spring.cache.cache-names=jobs,roles
+spring.cache.caffeine.spec=maximumSize=5000,expireAfterWrite=10m
 ```
 
-**What this configuration does:**
+- `maximumSize=5000`: limits the approximate number of entries kept in the cache.
+- `expireAfterWrite=10m`: entries expire 10 minutes after they are written or refreshed.
 
-| Cache Name | TTL Duration | Max Entries | Use Case |
-|---|---|---|---|
-| `companies` | 10 Minutes | 500 | Company data changes moderately |
-| `jobs` | 10 Minutes | 5,000 | Job listings are updated frequently |
-| `roles` | 1 Day | 100 | Roles are nearly static — long TTL is fine |
-
-**How TTL and max size work together:**
-- **`expireAfterWrite`** — Entries expire after this duration from their **last write**. After expiry, the next request fetches fresh data from the DB and re-caches it.
-- **`maximumSize`** — Keeps memory usage under control. When the limit is reached, the **least recently used** (LRU) entries are evicted to make room for new ones.
-
-> 📝 **Beginner Note — Simpler alternative using `application.properties`:**  
-> If you don't need different TTLs per cache, you can configure Caffeine globally via properties — much simpler:
-> ```properties
-> # application.properties
-> spring.cache.type=caffeine
-> spring.cache.cache-names=jobs,roles
-> spring.cache.caffeine.spec=maximumSize=5000,expireAfterAccess=600s
-> ```
-> This sets **all caches** to the same spec: max 5,000 entries, expire 600 seconds (10 minutes) after last access. Use the Java `@Configuration` approach (above) when you need **different settings per cache**.
-
-> ⚠️ **Common Mistake — Using `expireAfterWrite` vs `expireAfterAccess`:**  
-> - `expireAfterWrite` — Entry expires X time after it was **written/created**. Timer resets only when data is written again. Best for keeping data fresh.
-> - `expireAfterAccess` — Entry expires X time after it was **last read or written**. Frequently accessed data stays alive longer. Best for reducing eviction of popular entries.
-> - Choose based on your use case. For most DB caching, `expireAfterWrite` is safer because it guarantees freshness.
-
-> 💡 **Important to Remember — Spring Boot Caching vs Hibernate L2 Cache:**
-> | | Spring Boot Caching (`@Cacheable`) | Hibernate L2 Cache (`@Cache`) |
-> |---|---|---|
-> | **Level** | Application/service layer | JPA/entity layer |
-> | **Works on** | Any Spring Bean method | Entity loading by ID + JPQL queries |
-> | **Annotations** | `@Cacheable`, `@CachePut`, `@CacheEvict` | `@Cache`, `@QueryHints` |
-> | **Key** | Method parameters | Entity ID |
-> | **Provider** | Caffeine, Redis, EhCache, etc. | Caffeine (via JCache), EhCache, etc. |
-> | **When to use** | Service-layer caching for API responses, computations | Entity-level caching for repeated `findById` calls |
-> | **Can use both?** | ✅ Yes — they complement each other! |
+This example applies the same settings to the named caches. Use Java configuration when different caches need different expiry times.
 
 ---
+
+#### 6.6.8 Common Mistakes
+
+- **Outdated data:** Update or remove the cached entry when the underlying data changes.
+- **Caching everything:** Cache only when repeated calls make it worthwhile.
+- **Wrong cache key:** Prefer stable values such as an ID over a whole mutable object.
+- **Forgetting `@EnableCaching`:** Spring's caching annotations will not be activated as expected.
+- **Using `@Cacheable` for writes:** A cache hit can skip the method, so the database operation may not run.
+- **Direct SQL updates:** Native SQL or bulk update queries may leave cached data outdated; clear or evict affected entries when needed.
+
+---
+
+#### 6.6.9 Quick Revision
+
+- **Caching:** Keeps frequently used data ready in memory to reduce repeated work.
+- **First-level cache:** Automatic; works within one persistence context.
+- **Second-level cache:** Optional; can share cached entities across contexts and needs setup.
+- **`@Cacheable`:** Use a cached result when available.
+- **`@CachePut`:** Run the method and update the cache.
+- **`@CacheEvict`:** Remove data from the cache.
+- **TTL:** How long a cached entry remains valid.
+- **Caffeine:** A common in-memory cache provider for a single application instance.
+
+##### Interview Answer
+
+“Caching stores frequently used data so the application does not have to fetch it from the database every time. Hibernate has a first-level cache by default and an optional second-level cache. Spring Boot also provides `@Cacheable`, `@CachePut`, and `@CacheEvict` to cache method results, update cached data, and remove outdated entries.”
 
 ## 7. Quick Revision Cheat Sheet
 
@@ -3263,7 +2830,7 @@ new Object()          save()/persist()          transaction ends
 
 ## 8. Interview Questions & Answers
 
-### Fundamentals
+### 8.1 Fundamentals
 
 ---
 
@@ -3286,7 +2853,7 @@ new Object()          save()/persist()          transaction ends
 
 ---
 
-### Entity Mapping
+### 8.2 Entity Mapping
 
 ---
 
@@ -3308,7 +2875,7 @@ new Object()          save()/persist()          transaction ends
 
 ---
 
-### N+1 & Performance
+### 8.3 N+1 & Performance
 
 ---
 
@@ -3332,7 +2899,7 @@ new Object()          save()/persist()          transaction ends
 
 ---
 
-### Transactions
+### 8.4 Transactions
 
 ---
 
@@ -3356,7 +2923,7 @@ new Object()          save()/persist()          transaction ends
 
 ---
 
-### Queries
+### 8.5 Queries
 
 ---
 
@@ -3387,7 +2954,7 @@ new Object()          save()/persist()          transaction ends
 
 ---
 
-### Advanced
+### 8.6 Advanced
 
 ---
 
@@ -3456,9 +3023,4 @@ public class User {
 
 ---
 
-> 📝 **Final Note:** This document covers Spring Data JPA from foundation to production patterns. Keep it bookmarked for quick reference during development and interview preparation. The most important concepts to deeply understand are: Entity relationships and fetch strategies, the N+1 problem, transaction management, and the Specification pattern for dynamic queries.
 
----
-
-*Generated for developers building production-grade Spring Boot applications.*  
-*Spring Boot 3.x | Spring Data JPA 3.x | Hibernate 6.x | Java 17+*
