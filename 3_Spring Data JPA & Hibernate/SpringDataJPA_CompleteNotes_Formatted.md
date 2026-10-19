@@ -2691,11 +2691,17 @@ Use stable values such as IDs or unique names as keys.
 
 #### 6.6.7 Cache Expiry (TTL)
 
-**TTL (Time To Live)** is how long cached data remains valid before it expires.
+**TTL (Time To Live)** is how long cached data remains **valid** before it **expires**.
 
-Example: If a job listing is cached for 10 minutes, after it expires the next request can fetch fresh data and cache it again.
+Cached data stays available for a **limited time**. After it expires, the application may **fetch fresh data** again.
 
-For a simple in-memory cache with Caffeine, add the dependency:
+**Example:** If a job listing is cached for **10 minutes**, then once it expires, the next request can fetch fresh data and **cache it again**.
+
+---
+
+##### Caffeine Setup (Simple In-Memory Cache)
+
+Add the dependency:
 
 ```xml
 <dependency>
@@ -2712,25 +2718,73 @@ spring.cache.cache-names=jobs,roles
 spring.cache.caffeine.spec=maximumSize=5000,expireAfterWrite=10m
 ```
 
-- `maximumSize=5000`: limits the approximate number of entries kept in the cache.
-- `expireAfterWrite=10m`: entries expire 10 minutes after they are written or refreshed.
-
-This example applies the same settings to the named caches. Use Java configuration when different caches need different expiry times.
+- **`maximumSize=5000`**: limits the approximate **number of entries** kept in the cache.
+- **`expireAfterWrite=10m`**: entries **expire 10 minutes** after they are written or refreshed.
 
 ---
 
-#### 6.6.8 Common Mistakes
+##### Simple Example
 
-- **Outdated data:** Update or remove the cached entry when the underlying data changes.
-- **Caching everything:** Cache only when repeated calls make it worthwhile.
-- **Wrong cache key:** Prefer stable values such as an ID over a whole mutable object.
-- **Forgetting `@EnableCaching`:** Spring's caching annotations will not be activated as expected.
-- **Using `@Cacheable` for writes:** A cache hit can skip the method, so the database operation may not run.
-- **Direct SQL updates:** Native SQL or bulk update queries may leave cached data outdated; clear or evict affected entries when needed.
+Suppose you cache **user details for 5 minutes**:
+
+1. **First request** → Data is fetched from the **database** and stored in the **cache**.
+2. **Next request within 5 minutes** → Data comes from the **cache**.
+3. **After 5 minutes** → The cached entry **expires**. The next request fetches **fresh data** from the database and caches it again.
+
+> **Remember:** TTL controls **how long cached data remains valid**. It helps prevent your application from using **stale data** for too long.
+
 
 ---
 
-#### 6.6.9 Quick Revision
+### 6.6.8 Cache-Aside Pattern
+
+**Cache-aside** means: first check the **cache**. If the data is **not there**, fetch it from the **database** and put it in the cache.
+
+---
+
+### Analogy: Looking for a Book 📚
+
+Imagine you need a book:
+
+1. First, check your **desk**.
+2. If the book is there, **use it**.
+3. If it's not there, get it from the **library** and keep it on your desk for **next time**.
+
+Your **desk** is the **cache**, and the **library** is the **database**.
+
+---
+
+### How It Works
+
+1. **User requests data**
+2. **Check the cache**
+   - **Cache hit** → Return data from the cache
+   - **Cache miss** → Fetch from the **database**, then **store it in the cache**
+
+---
+
+### Simple Example
+
+Suppose you request user `1`:
+
+- **First request:** The cache is **empty** (cache miss), so the application fetches the user from the **database** and stores the result in the **cache**.
+- **Second request:** The user is **already cached** (cache hit), so the application returns the **cached data** without querying the database again.
+
+---
+
+> **Remember:** Cache-aside = **Check cache** → If missing, **get data from database** → **Store it in cache**.
+>
+> The **application manages** this process itself. When database data changes, the application should also **update or invalidate** the relevant cached entry to avoid serving **stale data**.
+
+
+### 6.6.9 Cache Invalidation
+Cache invalidation means **removing or updating old data** in the cache when the original data changes.
+
+### 6.6.10 Cache Consistency
+Cache consistency means **keeping the cache and database in sync** so that users don't get outdated data.
+
+
+#### 6.6.11 Quick Revision
 
 - **Caching:** Keeps frequently used data ready in memory to reduce repeated work.
 - **First-level cache:** Automatic; works within one persistence context.
