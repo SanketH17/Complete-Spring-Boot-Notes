@@ -2063,55 +2063,281 @@ public class User {
 
 ### 6.4 JPA Transactions (`@Transactional`)
 
-#### 6.4.1 What is a transaction?
+#### 6.4.1 🔄 What is a transaction?
 
-A **transaction** is a group of database actions that should succeed or fail together.
+A **transaction** is a group of database operations that should **all succeed or all fail together**. 🎯
 
-**Example: transferring money**
+Example: transferring ₹500 between two bank accounts 🏦:
 
-1. Subtract ₹500 from Account A.
-2. Add ₹500 to Account B.
+1. Subtract ₹500 from **Account A**.
+2. Add ₹500 to **Account B**.
 
-Both actions should succeed. If one fails, the database changes should be undone.
+If step 2 fails, step 1 should **also be undone**.
 
-- **Commit** = save the changes.
-- **Rollback** = undo the changes.
+- ✅ **Commit:** Keep the database changes.
+- ↩️ **Rollback:** Undo the database changes made by the transaction.
 
-#### 6.4.2 What does `@Transactional` do?
+#### 6.4.2 🧪 ACID properties
 
-`@Transactional` tells Spring to manage a database transaction for a method.
+ACID describes four important rules that help database transactions stay reliable.
 
-- If the method finishes successfully, Spring commits the transaction.
-- If an unchecked exception (`RuntimeException`) or an `Error` escapes the method, Spring rolls it back by default.
+| Property | Simple meaning | Example |
+|---|---|---|
+| ⚛️ **Atomicity** | **All** operations happen, or **none** do. | Money is not taken from A unless it is added to B. |
+| ⚖️ **Consistency** | The data follows the database rules before and after the transaction. | An account balance must follow the application's allowed rules. |
+| 🔐 **Isolation** | Transactions running at the same time should not interfere in unsafe ways. | Two transfers should not accidentally overwrite each other's updates. |
+| 💾 **Durability** | Once **committed**, the changes **remain saved**, even after a restart. | A completed transfer remains recorded after the application restarts. |
 
-##### Example
+> 🎯 **Interview tip:** **Atomicity** = all or nothing; **Consistency** = valid data; **Isolation** = safe concurrent work; **Durability** = committed data stays saved.
+
+#### 6.4.3 🏷️ Spring transaction management and `@Transactional`
+
+Spring transaction management handles starting, committing, and rolling back database transactions for us.
+
+`@Transactional` is an annotation in Spring Boot that **manages database transactions automatically**. It helps ensure that a group of database operations either **completes successfully as a whole** or is **rolled back** when a qualifying failure occurs.
+
+##### 🧩 Simplified example
 
 ```java
 @Service
 public class BankService {
 
-    private final AccountRepository accountRepository;
+    private final AccountRepository repo;
 
-    public BankService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
+    public BankService(AccountRepository repo) {
+        this.repo = repo;
     }
 
     @Transactional
-    public void transferMoney(Long fromId, Long toId) {
-        Account from = accountRepository.findById(fromId).orElseThrow();
-        Account to = accountRepository.findById(toId).orElseThrow();
+    public void transferMoney(Long fromId, Long toId, BigDecimal amount) {
 
-        from.setBalance(from.getBalance() - 500);
-        to.setBalance(to.getBalance() + 500);
+        Account from = repo.findById(fromId).orElseThrow();
+        Account to = repo.findById(toId).orElseThrow();
+
+        if (from.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        from.setBalance(from.getBalance().subtract(amount));
+        to.setBalance(to.getBalance().add(amount));
     }
 }
 ```
 
-No `save()` call is needed here if both accounts are managed entities in this transaction. JPA's dirty checking saves their changes when the transaction commits.
+##### 💬 Simple explanation
 
-**Remember:** `@Transactional` protects database work in the transaction. It cannot automatically undo an external action, such as a real payment sent to a payment gateway.
+`@Transactional` ensures both account updates happen as one transaction.
 
-#### 6.4.3 Useful options
+- ✅ **Success:** Money is deducted from one account and added to the other. Spring **commits** the changes to the database.
+- ❌ **Failure:** If an **unchecked exception** occurs, Spring **rolls back** the transaction.
+- 💡 **No `save()` needed:** JPA automatically **detects changes** to the loaded accounts and saves them when the transaction commits.
+
+> 💡 **Remember:** Either both account changes succeed, or the database changes are rolled back.
+
+#### 6.4.4 🚧 Transaction boundaries
+
+A **transaction boundary** is where a transaction **starts** and where it **finishes**.
+
+With Spring's usual proxy-based setup:
+
+1. A call comes into a Spring-managed transactional method through its proxy.
+2. Spring starts or joins a transaction.
+3. The method performs database work.
+4. If it completes successfully, Spring commits; if a rollback-triggering exception escapes, Spring rolls back.
+
+Keep related database changes inside one service method when they must succeed or fail together. ⚠️ A database rollback **cannot automatically undo an external action**, such as an email or a payment already sent to another system.
+
+#### 6.4.5 ↩️ Rollback rules
+
+Rollback means **undoing database changes**.
+
+| Rule              | Easy meaning                                          |
+| ----------------- | ----------------------------------------------------- |
+| ✅ Default         | Rollback for `RuntimeException` and `Error`.          |
+| Checked exception | No rollback by default, e.g. `IOException`.           |
+| `rollbackFor`     | Tell Spring when to rollback.                         |
+| `noRollbackFor`   | Tell Spring not to rollback for a specific exception. |
+
+**🧩 Example: Rollback for all exceptions**
+
+```java
+@Transactional(rollbackFor = Exception.class)
+public void importData() throws Exception {
+    // Update database
+    throw new Exception("Something went wrong");
+}
+```
+
+Here, Spring rolls back the database changes if the exception escapes the method.
+
+> 💡 **Remember:**
+
+- `RuntimeException` → ✅ **rollback** by default.
+- Checked exception → ❌ **no rollback** by default.
+- `rollbackFor` → rollback for the **specified** exception.
+- ⚠️ If you **catch** an exception and **do not rethrow** it, Spring may **commit** the changes.
+
+#### 6.4.6 🔀 Transaction Propagation
+
+**Propagation** decides what happens when a transactional method calls another method that also uses `@Transactional`.
+
+There are 7 types, but the most important ones are `REQUIRED` and `REQUIRES_NEW`.
+
+##### 1. 📋 Types of propagation
+
+| Type                 | Easiest meaning                                                      |
+| -------------------- | -------------------------------------------------------------------- |
+| `REQUIRED` (default) | **Use the existing** transaction, or create one if needed.               |
+| `REQUIRES_NEW`       | Start a **separate** transaction.                                        |
+| `NESTED`             | Create a savepoint inside the current transaction, if supported.     |
+| `SUPPORTS`           | Use a transaction if one already exists; otherwise, run without one. |
+| `NOT_SUPPORTED`      | Run without a transaction.                                           |
+| `MANDATORY`          | Must have an existing transaction, or throw an exception.            |
+| `NEVER`              | Must not have an existing transaction, or throw an exception.        |
+
+##### 2. 🤝 Easy example: `REQUIRED`
+
+Imagine you are placing an order 🛒.
+
+```java
+@Transactional
+public void placeOrder() {
+    saveOrder();
+    updateStock();
+}
+```
+
+Both operations use the **same transaction**.
+
+- ✅ If both succeed, the transaction **commits**.
+- ❌ If a qualifying exception causes rollback, **both** database changes **roll back**.
+
+💡 `REQUIRED` is the **default**, so it is usually what you need.
+
+##### 3. 🆕 Easy example: `REQUIRES_NEW`
+
+Imagine you want to save an audit record even if placing the order fails 📝.
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void saveAudit() {
+    auditRepository.save(new AuditRecord());
+}
+```
+
+`REQUIRES_NEW` starts a **separate transaction**.
+
+**🧩 For example:**
+
+- ✅ The audit record is saved successfully.
+- ❌ The order later fails and rolls back.
+- 💾 The audit record can still remain saved because it has its own transaction.
+
+> 💡 **Remember:**
+>
+> - `REQUIRED` = **Same** transaction.
+> - `REQUIRES_NEW` = **Separate** transaction.
+
+For most normal service methods, start with `REQUIRED`. Use `REQUIRES_NEW` when a task must **commit independently** of the main transaction.
+
+> 🎯 **Interview answer:** `REQUIRES_NEW` is a Spring transaction propagation type that **always starts a new transaction**. If a transaction is already active, Spring **suspends** it temporarily. The new transaction commits or rolls back independently of the suspended transaction.
+
+#### 6.4.7 🔐 Isolation Levels in Spring Boot
+
+**Isolation** controls what one transaction can see while other transactions are running at the same time.
+
+##### 1. Analogy: Two people using the same spreadsheet 📊
+
+Imagine two bank employees, A and B, checking and updating the same account balance at the same time.
+
+Isolation levels control what each employee can see while the other is making changes.
+
+**Example:** Account balance is ₹1,000
+
+| Employee | Action |
+|---|---|
+| **Employee A** | Updates balance |
+| **Employee B** | Reads balance |
+
+The database decides whether Employee B can see A's uncommitted changes, and whether B sees different data when reading again.
+
+##### 2. 🎚️ Types of isolation levels
+
+| Level              | Easiest meaning                                                          |
+| ------------------ | ------------------------------------------------------------------------ |
+| `DEFAULT`          | Use the **database's default setting.                                      |
+| `READ_UNCOMMITTED` | May read changes that are not saved permanently yet.                     |
+| `READ_COMMITTED`   | Read only changes that have been committed.                              |
+| `REPEATABLE_READ`  | Reading the same row again gives a stable result during the transaction. |
+| `SERIALIZABLE`     | **Strongest** isolation; transactions behave as if they run one at a time.   |
+
+##### 3. 🔍 Understand with simple examples
+
+###### 🔓 `READ_UNCOMMITTED` — Reading unfinished work
+
+Employee A changes the balance to ₹500 but hasn't committed the change yet.
+
+Employee B sees ₹500. Then Employee A cancels the change.
+
+⚠️ Employee B saw data that was never committed. This is called a **dirty read**.
+
+###### 🔒 `READ_COMMITTED` — Reading only saved work
+
+Employee A changes the balance and commits it.
+
+Employee B can see the new balance **only after A commits**.
+
+However, if B reads the balance again later, it may be different because another transaction has updated it.
+
+###### 📌 `REPEATABLE_READ` — Keeping the same row stable
+
+Employee B reads an account balance of ₹1,000.
+
+Even if Employee A updates that account, B's repeated read of the same row **remains stable** for the transaction under this isolation level. The exact behavior can depend on the database.
+
+###### 🚦 `SERIALIZABLE` — Taking turns
+
+Imagine only one employee is allowed to perform conflicting work at a time.
+
+This provides **stronger protection** against concurrent transaction problems, but can make the application **slower** or cause transactions to retry.
+
+##### 4. ❓ What are dirty reads, non-repeatable reads and phantom reads?
+
+- **Dirty read:** You read another transaction's changes before they are committed.
+- **Non-repeatable read:** You read the same row twice and get different values.
+- **Phantom read:** You run the same search twice and get a different set of rows, because matching rows were added or removed.
+
+##### 5. 🚀 Simple Spring Boot example
+
+```java
+@Transactional(isolation = Isolation.READ_COMMITTED)
+public User getUser(Long id) {
+    return userRepository.findById(id).orElseThrow();
+}
+```
+
+Here, `READ_COMMITTED` tells Spring to use that isolation level for the transaction, assuming the transaction manager and database support it.
+
+> 💡 **Remember:**
+
+- ✅ `READ_COMMITTED` is a **common choice**.
+- ⚖️ **Higher isolation** generally provides stronger protection against concurrency problems, but can **reduce performance**.
+- `DEFAULT` uses the **database's configured default**.
+- Exact behavior depends on the database, and isolation settings generally take effect when a new transaction starts.
+
+#### 6.4.8 📖 Read-only transactions
+
+**`readOnly = true`** means: “This method is only supposed to read data, not change it.”
+
+##### Analogy: Library 📚
+
+Imagine you visit a library.
+
+You can read books, but you are not supposed to change the books.
+
+Similarly, a read-only transaction is meant for fetching data from the database without modifying it.
+
+##### 🚀 Simple Spring Boot example
 
 ```java
 @Transactional(readOnly = true)
@@ -2120,76 +2346,68 @@ public List<User> getUsers() {
 }
 ```
 
-Use `readOnly = true` for methods that only read data. It tells Spring and the database/provider that the operation is read-only and may allow optimizations; it is not a security rule that guarantees writes are impossible.
+**🔎 What does this do?**
+
+- `@Transactional` — manages the database transaction.
+- `readOnly = true` — tells Spring that this method is only meant to read data.
+- `findAll()` — fetches all users from the database.
+
+Spring and the database framework may use this information to **improve performance** ⚡.
+
+##### 💡 Important to remember
+
+⚠️ `readOnly = true` **does not guarantee** that database changes are blocked. It is mainly a **hint for optimization**.
+
+Use it for methods that only fetch data, such as `getUsers()` or `getUserById()`.
+
+> 💡 **Easy rule:** Reading data → `readOnly = true`. Changing data → use a normal `@Transactional` method when a transaction is needed.
+
+#### 6.4.9 🎭 Proxy-based transaction management and self-invocation
+
+Spring usually applies `@Transactional` using a **proxy** 🎭. A proxy is a Spring-created wrapper that intercepts a method call and applies transaction behavior.
+
+For this to work, the call **must go through the proxy**. Calling another method in the same class directly with `this` **bypasses** it.
 
 ```java
-@Transactional(rollbackFor = Exception.class)
-public void importData() throws Exception {
-    // database work
+@Service
+public class ReportService {
+
+    public void generateReport() {
+        this.loadData(); // Direct call inside this class: bypasses the proxy
+    }
+
+    @Transactional(readOnly = true)
+    public void loadData() {
+        // Read data
+    }
 }
 ```
 
-By default, checked exceptions (for example, `IOException`) do **not** trigger rollback. Use `rollbackFor` when checked exceptions should also cause rollback.
+Here, calling `generateReport()` does **not** activate a new transaction just because `loadData()` has `@Transactional`.
 
-```java
-@Transactional(noRollbackFor = EmailException.class)
-public void createUser() {
-    // database work
-}
-```
+> ✅ **Simple fix:** Move `loadData()` to another Spring-managed service and call that service through its injected dependency. Then the call passes through the proxy.
 
-`noRollbackFor` tells Spring not to roll back for the specified exception. Use it only when that behavior is intended.
+**⭐ Best practices:**
 
-```java
-@Transactional(timeout = 30)
-public void runReport() {
-    // database work
-}
-```
+- ✅ Put `@Transactional` on **service-layer** methods that define the unit of work.
+- ✅ Prefer **public** methods called from another Spring bean.
+- ❌ Avoid relying on `@Transactional` on private methods or on self-invocation (`this.someMethod()`).
+- 📌 A class-level `@Transactional` provides defaults for methods in that class; method-level settings can override those defaults.
 
-`timeout = 30` sets a 30-second transaction timeout. The exact effect depends on the transaction manager and database.
+#### 6.4.11 ⚡ Quick revision
 
-#### 6.4.4 Transaction propagation
+- 🔄 **Transaction:** A group of database operations that succeed or fail together.
+- 🧪 **ACID:** Atomicity, Consistency, Isolation, Durability.
+- 🏷️ **`@Transactional`:** Lets Spring manage transaction boundaries.
+- ✅ **Commit:** Keep changes. ↩️ **Rollback:** Undo database changes in the transaction.
+- 🔀 **Propagation:** Decides whether a method joins or starts a transaction; `REQUIRED` is the default.
+- 🔐 **Isolation:** Controls what concurrent transactions can see.
+- 📖 **`readOnly = true`:** Marks a read-only operation and may allow optimizations.
+- 🎭 **Proxy/self-invocation:** The call must pass through Spring's proxy for its transaction settings to apply.
 
-**Propagation** decides what happens when a transactional method calls another transactional method.
+#### 6.4.12 🎤 Interview answer
 
-| Type | Simple meaning |
-|---|---|
-| `REQUIRED` *(default)* | Join the current transaction, or start one if none exists. |
-| `REQUIRES_NEW` | Start a separate transaction; pause the outer one while it runs. |
-| `NESTED` | Use a savepoint inside the current transaction, when supported. |
-| `SUPPORTS` | Join a transaction if one exists; otherwise run without one. |
-| `NOT_SUPPORTED` | Run without a transaction; pause the current one if needed. |
-| `MANDATORY` | Must already have a transaction; otherwise, throw an exception. |
-| `NEVER` | Must not have a transaction; otherwise, throw an exception. |
-
-**Which should you learn first?**
-
-- Use `REQUIRED` for most everyday service methods.
-- Use `REQUIRES_NEW` only when an operation must commit or roll back separately, such as a separate audit record. This requires suitable transaction configuration.
-- The other types are less common in beginner-level application code.
-
-#### 6.4.5 Common mistakes
-
-- **Forgetting the service layer:** Usually put `@Transactional` on service methods that perform a group of database actions.
-- **Calling a method from the same class:** In Spring's usual proxy-based setup, `this.someMethod()` bypasses the proxy, so the called method's `@Transactional` settings may not apply.
-- **Using it on a private method:** Proxy-based transaction handling cannot intercept private method calls in the usual setup.
-- **Expecting every exception to roll back:** By default, rollback happens for `RuntimeException` and `Error`, not checked exceptions.
-- **Assuming external calls roll back:** A database rollback cannot automatically reverse an email, an external API call, or a payment already processed by another system.
-
-#### 6.4.6 Quick revision
-
-- `@Transactional` = Spring manages a database transaction for a method.
-- **Commit** = keep the changes; **rollback** = undo the database changes.
-- Use it for methods that perform multiple related database operations.
-- `readOnly = true` is for read operations.
-- `REQUIRED` is the default and usually the first choice.
-- `rollbackFor = Exception.class` includes checked exceptions in rollback rules.
-- Put transaction boundaries on service methods and ensure calls go through Spring's proxy.
-
-#### 6.4.7 Interview answer
-
-“`@Transactional` is a Spring annotation that manages a database transaction. If the method succeeds, the transaction commits. If an unchecked exception occurs, Spring rolls back the database changes by default. It is commonly used in the service layer when several database operations must succeed or fail together.”
+> “`@Transactional` is a Spring annotation that lets Spring manage a database transaction. It defines a boundary around related database operations: the changes are committed if the method succeeds, and Spring rolls them back for unchecked exceptions by default. I usually apply it at the service layer. I also consider propagation, isolation, and rollback rules when the business case requires them.”
 
 ---
 
@@ -2521,7 +2739,7 @@ This example applies the same settings to the named caches. Use Java configurati
 “Caching stores frequently used data so the application does not have to fetch it from the database every time. Hibernate has a first-level cache by default and an optional second-level cache. Spring Boot also provides `@Cacheable`, `@CachePut`, and `@CacheEvict` to cache method results, update cached data, and remove outdated entries.”
 
 
-
+---
 
 ## 7. Quick Revision Cheat Sheet
 
@@ -3031,5 +3249,3 @@ public class User {
 ```
 
 ---
-
-
