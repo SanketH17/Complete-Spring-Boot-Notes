@@ -1,4 +1,5 @@
 # Spring Data JPA – Complete Developer Notes
+
 ---
 
 ## 📋 Table of Contents
@@ -34,7 +35,7 @@
    - [Quick Comparison: JPQL vs Native SQL](#55-quick-comparison-jpql-vs-native-sql)
    - [Interview Revision](#56-interview-revision)
 6. [Advanced Topics](#6-advanced-topics)
-   - [The N+1 Problem (⚠️ CRITICAL — Most Common Performance Issue)](#61-the-n1-problem--critical--most-common-performance-issue)
+   - [The N+1 Problem](#61-the-n1-problem)
    - [JPA Entity Lifecycle](#62-jpa-entity-lifecycle)
    - [Dirty Checking](#63-dirty-checking)
    - [JPA Transactions (`@Transactional`)](#64-jpa-transactions-transactional)
@@ -170,7 +171,7 @@ Even with Hibernate doing the heavy SQL work, developers still had to write **re
 
 Here's the full picture of how these technologies are layered:
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │              YOUR APPLICATION CODE                   │
 │         (Service classes, Controllers)                │
@@ -711,7 +712,7 @@ public class UserProfile {
 
 **What happens in the database:**
 
-```
+```text
 users table:           user_profiles table:
 +----+-------+------------+    +----+------+
 | id | email | profile_id |    | id | bio  |
@@ -792,7 +793,7 @@ public class Employee {
 
 **What happens in the database:**
 
-```
+```text
 departments table:         employees table:
 +----+-------------+      +----+-------+---------------+
 | id | name        |      | id | name  | department_id |
@@ -870,7 +871,7 @@ public class Course {
 
 **What happens in the database:**
 
-```
+```text
 students table:        student_courses (JOIN TABLE):     courses table:
 +----+-------+        +------------+-----------+        +----+---------+
 | id | name  |        | student_id | course_id |        | id | title   |
@@ -1029,7 +1030,7 @@ A **repository** is a Java **interface** that acts as a bridge between your serv
 
 Spring Data JPA provides a **hierarchy** of repository interfaces, each one adding more features on top of the previous one:
 
-```
+```text
 Repository (marker interface — empty, does nothing by itself)
     └── CrudRepository<T, ID>                          → Basic CRUD (save, find, delete, count)
             └── ListCrudRepository<T, ID>              → Same as CrudRepository but returns List instead of Iterable
@@ -1165,7 +1166,7 @@ Without this feature, you'd need to write a `@Query` annotation (or native SQL) 
 
 Spring breaks your method name into parts and maps each part to SQL:
 
-```
+```text
 findByFirstNameAndStatusOrderByCreatedAtDesc
 │     │         │  │      │       │         │
 │     │         │  │      │       │         └── DESC = descending order
@@ -1722,7 +1723,9 @@ Named queries can be checked when the application starts, which can help reveal 
 
 > This section covers the concepts that separate a beginner JPA developer from a confident, production-ready one. These topics — the N+1 problem, entity lifecycle, dirty checking, transactions, locking, and caching — are the areas where real-world bugs and performance issues live. Master these, and you'll debug JPA problems faster than most senior developers.
 
-### 6.1 The N+1 Problem (⚠️ CRITICAL — Most Common Performance Issue)
+### 6.1 The N+1 Problem
+
+> ⚠️ **CRITICAL — Most Common Performance Issue**
 
 #### What is the N+1 Problem?
 
@@ -1784,6 +1787,7 @@ List<Employee> findAllWithDepartment();
 ```
 
 **Step-by-step: What happens behind the scenes:**
+
 1. Hibernate generates a single SQL `JOIN` query that fetches employees AND departments together
 2. For each row in the result, Hibernate builds an `Employee` object AND its associated `Department` object
 3. Since the department is already loaded, accessing `employee.getDepartment()` later does NOT trigger another query
@@ -2063,7 +2067,7 @@ public class User {
 
 ### 6.4 JPA Transactions (`@Transactional`)
 
-#### 6.4.1 🔄 What is a transaction?
+#### 6.4.1 What is a transaction?
 
 A **transaction** is a group of database operations that should **all succeed or all fail together**. 🎯
 
@@ -2077,7 +2081,7 @@ If step 2 fails, step 1 should **also be undone**.
 - ✅ **Commit:** Keep the database changes.
 - ↩️ **Rollback:** Undo the database changes made by the transaction.
 
-#### 6.4.2 🧪 ACID properties
+#### 6.4.2 ACID properties
 
 ACID describes four important rules that help database transactions stay reliable.
 
@@ -2090,13 +2094,13 @@ ACID describes four important rules that help database transactions stay reliabl
 
 > 🎯 **Interview tip:** **Atomicity** = all or nothing; **Consistency** = valid data; **Isolation** = safe concurrent work; **Durability** = committed data stays saved.
 
-#### 6.4.3 🏷️ Spring transaction management and `@Transactional`
+#### 6.4.3 Spring transaction management and `@Transactional`
 
 Spring transaction management handles starting, committing, and rolling back database transactions for us.
 
 `@Transactional` is an annotation in Spring Boot that **manages database transactions automatically**. It helps ensure that a group of database operations either **completes successfully as a whole** or is **rolled back** when a qualifying failure occurs.
 
-##### 🧩 Simplified example
+##### Simplified example
 
 ```java
 @Service
@@ -2124,7 +2128,7 @@ public class BankService {
 }
 ```
 
-##### 💬 Simple explanation
+##### Simple explanation
 
 `@Transactional` ensures both account updates happen as one transaction.
 
@@ -2134,7 +2138,7 @@ public class BankService {
 
 > 💡 **Remember:** Either both account changes succeed, or the database changes are rolled back.
 
-#### 6.4.4 🚧 Transaction boundaries
+#### 6.4.4 Transaction boundaries
 
 A **transaction boundary** is where a transaction **starts** and where it **finishes**.
 
@@ -2147,7 +2151,7 @@ With Spring's usual proxy-based setup:
 
 Keep related database changes inside one service method when they must succeed or fail together. ⚠️ A database rollback **cannot automatically undo an external action**, such as an email or a payment already sent to another system.
 
-#### 6.4.5 ↩️ Rollback rules
+#### 6.4.5 Rollback rules
 
 Rollback means **undoing database changes**.
 
@@ -2171,19 +2175,19 @@ public void importData() throws Exception {
 Here, Spring rolls back the database changes if the exception escapes the method.
 
 > 💡 **Remember:**
+>
+> - `RuntimeException` → ✅ **rollback** by default.
+> - Checked exception → ❌ **no rollback** by default.
+> - `rollbackFor` → rollback for the **specified** exception.
+> - ⚠️ If you **catch** an exception and **do not rethrow** it, Spring may **commit** the changes.
 
-- `RuntimeException` → ✅ **rollback** by default.
-- Checked exception → ❌ **no rollback** by default.
-- `rollbackFor` → rollback for the **specified** exception.
-- ⚠️ If you **catch** an exception and **do not rethrow** it, Spring may **commit** the changes.
-
-#### 6.4.6 🔀 Transaction Propagation
+#### 6.4.6 Transaction Propagation
 
 **Propagation** decides what happens when a transactional method calls another method that also uses `@Transactional`.
 
 There are 7 types, but the most important ones are `REQUIRED` and `REQUIRES_NEW`.
 
-##### 1. 📋 Types of propagation
+##### 1. Types of propagation
 
 | Type                 | Easiest meaning                                                      |
 | -------------------- | -------------------------------------------------------------------- |
@@ -2195,7 +2199,7 @@ There are 7 types, but the most important ones are `REQUIRED` and `REQUIRES_NEW`
 | `MANDATORY`          | Must have an existing transaction, or throw an exception.            |
 | `NEVER`              | Must not have an existing transaction, or throw an exception.        |
 
-##### 2. 🤝 Easy example: `REQUIRED`
+##### 2. Easy example: `REQUIRED`
 
 Imagine you are placing an order 🛒.
 
@@ -2242,11 +2246,11 @@ For most normal service methods, start with `REQUIRED`. Use `REQUIRES_NEW` when 
 
 > 🎯 **Interview answer:** `REQUIRES_NEW` is a Spring transaction propagation type that **always starts a new transaction**. If a transaction is already active, Spring **suspends** it temporarily. The new transaction commits or rolls back independently of the suspended transaction.
 
-#### 6.4.7 🔐 Isolation Levels in Spring Boot
+#### 6.4.7 Isolation Levels in Spring Boot
 
 **Isolation** controls what one transaction can see while other transactions are running at the same time.
 
-##### 1. Analogy: Two people using the same spreadsheet 📊
+##### 1. Analogy: Two people using the same spreadsheet
 
 Imagine two bank employees, A and B, checking and updating the same account balance at the same time.
 
@@ -2261,19 +2265,19 @@ Isolation levels control what each employee can see while the other is making ch
 
 The database decides whether Employee B can see A's uncommitted changes, and whether B sees different data when reading again.
 
-##### 2. 🎚️ Types of isolation levels
+##### 2. Types of isolation levels
 
 | Level              | Easiest meaning                                                          |
 | ------------------ | ------------------------------------------------------------------------ |
-| `DEFAULT`          | Use the **database's default setting.                                      |
+| `DEFAULT`          | Use the **database's default** setting.                                  |
 | `READ_UNCOMMITTED` | May read changes that are not saved permanently yet.                     |
 | `READ_COMMITTED`   | Read only changes that have been committed.                              |
 | `REPEATABLE_READ`  | Reading the same row again gives a stable result during the transaction. |
 | `SERIALIZABLE`     | **Strongest** isolation; transactions behave as if they run one at a time.   |
 
-##### 3. 🔍 Understand with simple examples
+##### 3. Understand with simple examples
 
-###### 🔓 `READ_UNCOMMITTED` — Reading unfinished work
+###### `READ_UNCOMMITTED` — Reading unfinished work
 
 Employee A changes the balance to ₹500 but hasn't committed the change yet.
 
@@ -2281,7 +2285,7 @@ Employee B sees ₹500. Then Employee A cancels the change.
 
 ⚠️ Employee B saw data that was never committed. This is called a **dirty read**.
 
-###### 🔒 `READ_COMMITTED` — Reading only saved work
+###### `READ_COMMITTED` — Reading only saved work
 
 Employee A changes the balance and commits it.
 
@@ -2289,25 +2293,25 @@ Employee B can see the new balance **only after A commits**.
 
 However, if B reads the balance again later, it may be different because another transaction has updated it.
 
-###### 📌 `REPEATABLE_READ` — Keeping the same row stable
+###### `REPEATABLE_READ` — Keeping the same row stable
 
 Employee B reads an account balance of ₹1,000.
 
 Even if Employee A updates that account, B's repeated read of the same row **remains stable** for the transaction under this isolation level. The exact behavior can depend on the database.
 
-###### 🚦 `SERIALIZABLE` — Taking turns
+###### `SERIALIZABLE` — Taking turns
 
 Imagine only one employee is allowed to perform conflicting work at a time.
 
 This provides **stronger protection** against concurrent transaction problems, but can make the application **slower** or cause transactions to retry.
 
-##### 4. ❓ What are dirty reads, non-repeatable reads and phantom reads?
+##### 4. What are dirty reads, non-repeatable reads and phantom reads?
 
 - **Dirty read:** You read another transaction's changes before they are committed.
 - **Non-repeatable read:** You read the same row twice and get different values.
 - **Phantom read:** You run the same search twice and get a different set of rows, because matching rows were added or removed.
 
-##### 5. 🚀 Simple Spring Boot example
+##### 5. Simple Spring Boot example
 
 ```java
 @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -2319,17 +2323,17 @@ public User getUser(Long id) {
 Here, `READ_COMMITTED` tells Spring to use that isolation level for the transaction, assuming the transaction manager and database support it.
 
 > 💡 **Remember:**
+>
+> - ✅ `READ_COMMITTED` is a **common choice**.
+> - ⚖️ **Higher isolation** generally provides stronger protection against concurrency problems, but can **reduce performance**.
+> - `DEFAULT` uses the **database's configured default**.
+> - Exact behavior depends on the database, and isolation settings generally take effect when a new transaction starts.
 
-- ✅ `READ_COMMITTED` is a **common choice**.
-- ⚖️ **Higher isolation** generally provides stronger protection against concurrency problems, but can **reduce performance**.
-- `DEFAULT` uses the **database's configured default**.
-- Exact behavior depends on the database, and isolation settings generally take effect when a new transaction starts.
-
-#### 6.4.8 📖 Read-only transactions
+#### 6.4.8 Read-only transactions
 
 **`readOnly = true`** means: “This method is only supposed to read data, not change it.”
 
-##### Analogy: Library 📚
+##### Analogy: Library
 
 Imagine you visit a library.
 
@@ -2337,7 +2341,7 @@ You can read books, but you are not supposed to change the books.
 
 Similarly, a read-only transaction is meant for fetching data from the database without modifying it.
 
-##### 🚀 Simple Spring Boot example
+##### Simple Spring Boot example
 
 ```java
 @Transactional(readOnly = true)
@@ -2354,7 +2358,7 @@ public List<User> getUsers() {
 
 Spring and the database framework may use this information to **improve performance** ⚡.
 
-##### 💡 Important to remember
+##### Important to remember
 
 ⚠️ `readOnly = true` **does not guarantee** that database changes are blocked. It is mainly a **hint for optimization**.
 
@@ -2362,7 +2366,7 @@ Use it for methods that only fetch data, such as `getUsers()` or `getUserById()`
 
 > 💡 **Easy rule:** Reading data → `readOnly = true`. Changing data → use a normal `@Transactional` method when a transaction is needed.
 
-#### 6.4.9 🎭 Proxy-based transaction management and self-invocation
+#### 6.4.9 Proxy-based transaction management and self-invocation
 
 Spring usually applies `@Transactional` using a **proxy** 🎭. A proxy is a Spring-created wrapper that intercepts a method call and applies transaction behavior.
 
@@ -2394,7 +2398,7 @@ Here, calling `generateReport()` does **not** activate a new transaction just be
 - ❌ Avoid relying on `@Transactional` on private methods or on self-invocation (`this.someMethod()`).
 - 📌 A class-level `@Transactional` provides defaults for methods in that class; method-level settings can override those defaults.
 
-#### 6.4.11 ⚡ Quick revision
+#### 6.4.11 Quick revision
 
 - 🔄 **Transaction:** A group of database operations that succeed or fail together.
 - 🧪 **ACID:** Atomicity, Consistency, Isolation, Durability.
@@ -2405,7 +2409,7 @@ Here, calling `generateReport()` does **not** activate a new transaction just be
 - 📖 **`readOnly = true`:** Marks a read-only operation and may allow optimizations.
 - 🎭 **Proxy/self-invocation:** The call must pass through Spring's proxy for its transaction settings to apply.
 
-#### 6.4.12 🎤 Interview answer
+#### 6.4.12 Interview answer
 
 > “`@Transactional` is a Spring annotation that lets Spring manage a database transaction. It defines a boundary around related database operations: the changes are committed if the method succeeds, and Spring rolls them back for unchecked exceptions by default. I usually apply it at the service layer. I also consider propagation, isolation, and rollback rules when the business case requires them.”
 
@@ -2537,6 +2541,7 @@ The row stays locked during the transaction. When the transaction finishes, the 
 **Example:** The list of countries rarely changes. Fetch it once, cache it, and reuse it for later requests.
 
 **Why use it?**
+
 - Faster responses
 - Fewer database queries
 - Less load on the database
@@ -2629,6 +2634,7 @@ public class RoleService {
 ```
 
 **How it works:**
+
 1. First call for `ADMIN`: the method runs and the result is cached.
 2. Next call for `ADMIN`: Spring returns the cached result, so the method is skipped.
 3. A call for `USER` uses a different cache key and runs separately.
@@ -2648,6 +2654,7 @@ public void deleteRole(String name) {
 ```
 
 **Remember:**
+
 - `@Cacheable` — reuse a result.
 - `@CachePut` — run the method and refresh the cached result.
 - `@CacheEvict` — remove a cached result.
@@ -2738,14 +2745,13 @@ This example applies the same settings to the named caches. Use Java configurati
 
 “Caching stores frequently used data so the application does not have to fetch it from the database every time. Hibernate has a first-level cache by default and an optional second-level cache. Spring Boot also provides `@Cacheable`, `@CachePut`, and `@CacheEvict` to cache method results, update cached data, and remove outdated entries.”
 
-
 ---
 
 ## 7. Quick Revision Cheat Sheet
 
 ### 7.1 The Stack
 
-```
+```text
 Your Code → Spring Data JPA → JPA (spec) → Hibernate (engine) → JDBC → Database
 ```
 
@@ -2793,6 +2799,7 @@ Your Code → Spring Data JPA → JPA (spec) → Hibernate (engine) → JDBC →
 > **Rule:** `@ManyToOne` side is always the owner (FK lives in the "many" table).
 
 **Key terms:**
+
 - **Owner side** → has `@JoinColumn`, holds the FK column
 - **Inverse side** → uses `mappedBy`, no FK created
 - Always sync both sides in bidirectional relationships
@@ -2891,6 +2898,7 @@ When Spring finds a repository method, it checks in this order:
 - Add `@Modifying(clearAutomatically = true)` to avoid stale persistence context
 
 **Projections** — fetch only needed columns:
+
 - **Interface-based** (recommended): define interface with getters → Spring auto-implements
 - **DTO-based**: JPQL `new` constructor expression
 - **Dynamic**: pass projection type as parameter
@@ -2931,7 +2939,7 @@ PageRequest.of(page, size, Sort.by("field").descending())  // page is 0-indexed!
 
 ### 7.11 Entity Lifecycle States
 
-```
+```text
 new Object()          save()/persist()          transaction ends
      │                      │                         │
  TRANSIENT ──────────→ MANAGED ──────────────→ DETACHED
@@ -2980,6 +2988,7 @@ new Object()          save()/persist()          transaction ends
 | `NEVER` | Must NOT be within a tx, else exception |
 
 **Critical rules:**
+
 - ✅ Only on **public** methods (proxy can't intercept private)
 - ✅ Place on **service layer** (not controllers or repositories)
 - ❌ **Self-invocation** bypasses proxy → `@Transactional` ignored (fix: inject `self`)
@@ -2990,12 +2999,14 @@ new Object()          save()/persist()          transaction ends
 ### 7.14 Locking
 
 **Optimistic (recommended for most apps):**
+
 - Add `@Version` field → Hibernate checks version on every UPDATE
 - Conflict → `OptimisticLockException` → retry or return 409
 - No DB locks, no blocking, no deadlocks
 - Best when: conflicts are **rare** (read-heavy apps)
 
 **Pessimistic (high-contention scenarios):**
+
 - `@Lock(LockModeType.PESSIMISTIC_WRITE)` → `SELECT ... FOR UPDATE`
 - Row is locked — other transactions **wait**
 - Risk: deadlocks (always lock rows in consistent order)
@@ -3006,11 +3017,13 @@ new Object()          save()/persist()          transaction ends
 ### 7.15 Caching
 
 **First-Level Cache (always on):**
+
 - Per-transaction, per-session — automatic
 - Same `findById()` twice in one `@Transactional` → 1 SQL query
 - Cleared when transaction ends
 
 **Second-Level Cache (L2 — needs config):**
+
 - Shared across transactions, application-wide
 - Add `@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)` on entity
 - Requires: dependency (Caffeine/EhCache) + `hibernate.cache.use_second_level_cache=true`
@@ -3022,6 +3035,7 @@ new Object()          save()/persist()          transaction ends
 | `READ_WRITE` | Consistent | User profiles, products |
 
 **Spring Boot Caching (`@Cacheable`):**
+
 - Works on **any Spring Bean method**, not just DB queries
 - Requires `@EnableCaching` on config class
 
@@ -3059,22 +3073,16 @@ new Object()          save()/persist()          transaction ends
 
 ### 8.1 Fundamentals
 
----
-
-**Q1: What is the difference between JPA, Hibernate, and Spring Data JPA?**
+#### Q1: What is the difference between JPA, Hibernate, and Spring Data JPA?
 
 **A:** JPA is a **specification** (a set of interfaces and rules defined by Jakarta EE). Hibernate is an **implementation** of that specification — it's the actual code that translates Java operations to SQL. Spring Data JPA is an **abstraction layer on top of JPA** that eliminates boilerplate code by auto-generating repository implementations, supporting method-name-based query generation, and providing built-in pagination. The relationship is:  
 `Spring Data JPA → JPA (interfaces) → Hibernate (implementation) → JDBC → Database`
 
----
-
-**Q2: What is an EntityManager and what is its role?**
+#### Q2: What is an EntityManager and what is its role?
 
 **A:** The `EntityManager` is the core JPA interface for interacting with the **persistence context** (first-level cache). It manages entity lifecycle operations: `persist()` (insert), `merge()` (update detached), `remove()` (delete), `find()` (select by PK), and `createQuery()` (JPQL queries). Spring Data JPA hides this behind repositories, but it's used internally and can be injected with `@PersistenceContext` for custom repository implementations.
 
----
-
-**Q3: What is the persistence context?**
+#### Q3: What is the persistence context?
 
 **A:** The persistence context is a **cache that holds managed entities** during a unit of work (usually one transaction). It's Hibernate's first-level cache — every entity loaded or saved within a transaction is stored here. This enables dirty checking (auto-detecting and flushing changes) and ensures identity guarantee (same DB row = same Java object instance within one session). The persistence context is flushed (SQL sent to DB) before commits or explicit `flush()` calls.
 
@@ -3082,21 +3090,15 @@ new Object()          save()/persist()          transaction ends
 
 ### 8.2 Entity Mapping
 
----
-
-**Q4: What is the difference between `@JoinColumn` and `mappedBy`?**
+#### Q4: What is the difference between `@JoinColumn` and `mappedBy`?
 
 **A:** `@JoinColumn` is placed on the **owner side** of the relationship (the entity whose table contains the foreign key column). `mappedBy` is placed on the **inverse/non-owner side** and tells JPA "don't create a foreign key here — the relationship is owned by the field named X in the other entity." If you forget `mappedBy`, JPA creates a join table or extra columns.
 
----
-
-**Q5: Why should you use `@Enumerated(EnumType.STRING)` instead of the default `ORDINAL`?**
+#### Q5: Why should you use `@Enumerated(EnumType.STRING)` instead of the default `ORDINAL`?
 
 **A:** `ORDINAL` stores the enum's position (0, 1, 2...). If you reorder enum constants or add new ones in the middle, all stored data becomes invalid/corrupted. `STRING` stores the enum name ("ACTIVE", "INACTIVE"), which is stable — reordering or adding constants doesn't affect stored data. Always use `EnumType.STRING`.
 
----
-
-**Q6: What is the difference between `CascadeType.ALL` and `orphanRemoval = true`?**
+#### Q6: What is the difference between `CascadeType.ALL` and `orphanRemoval = true`?
 
 **A:** `CascadeType.ALL` means all JPA operations (persist, merge, remove, refresh, detach) on the parent are cascaded to children. `orphanRemoval = true` specifically handles the case where you **remove a child from the parent's collection** — the child is automatically deleted from the database. `CascadeType.REMOVE` only deletes children when the parent itself is deleted. `orphanRemoval` handles collection removals. Both are often used together on `@OneToMany` relationships.
 
@@ -3104,23 +3106,20 @@ new Object()          save()/persist()          transaction ends
 
 ### 8.3 N+1 & Performance
 
----
-
-**Q7: What is the N+1 problem? How do you detect and fix it?**
+#### Q7: What is the N+1 problem? How do you detect and fix it?
 
 **A:** The N+1 problem occurs when fetching N entities triggers N additional queries to load their related entities (e.g., fetching 100 orders then 100 separate queries for each order's customer = 101 queries total).
 
 **Detection:** Enable `show-sql=true` and count queries, or use `datasource-proxy` / `p6spy` in tests. Hibernate also logs warnings.
 
 **Fixes:**
+
 1. **JOIN FETCH** in JPQL: `SELECT e FROM Employee e JOIN FETCH e.department`
 2. **@EntityGraph**: `@EntityGraph(attributePaths = {"department"})`
 3. **@BatchSize**: `@BatchSize(size = 30)` on the collection — loads in batches
 4. **FetchMode.SUBSELECT**: Loads all children in one subquery
 
----
-
-**Q8: When would you use `PESSIMISTIC_WRITE` vs `@Version` (optimistic locking)?**
+#### Q8: When would you use `PESSIMISTIC_WRITE` vs `@Version` (optimistic locking)?
 
 **A:** Use **optimistic locking (`@Version`)** when conflicts are rare — it allows concurrent reads, and only fails at commit if a concurrent update happened. It's lighter weight and scales better. Use **`PESSIMISTIC_WRITE`** when conflicts are frequent or the cost of retrying is high — it locks the row immediately (other transactions wait or fail). For example, inventory reduction in flash sales should use pessimistic locking to prevent overselling; a user profile update can use optimistic locking.
 
@@ -3128,23 +3127,18 @@ new Object()          save()/persist()          transaction ends
 
 ### 8.4 Transactions
 
----
-
-**Q9: `@Transactional` on a private method — does it work?**
+#### Q9: `@Transactional` on a private method — does it work?
 
 **A:** No. Spring's transaction management uses **AOP proxies**. The proxy wraps the bean and intercepts method calls to apply transactional behavior. Private methods are not visible to the proxy (and are not overridable), so `@Transactional` is completely ignored. The fix: make the method `public`, or refactor the logic into a separate Spring bean where the proxy can intercept it.
 
----
-
-**Q10: What is the difference between transaction propagation `REQUIRED` and `REQUIRES_NEW`?**
+#### Q10: What is the difference between transaction propagation `REQUIRED` and `REQUIRES_NEW`?
 
 **A:**
+
 - `REQUIRED` (default): If a transaction already exists, join it. If not, create a new one. All operations share one transaction — one rollback affects everything.
 - `REQUIRES_NEW`: Always start a brand new transaction, suspending any existing one. The new transaction has its own commit/rollback lifecycle. Use case: **audit logging** — you want the audit record saved even if the main business transaction rolls back.
 
----
-
-**Q11: What is dirty checking?**
+#### Q11: What is dirty checking?
 
 **A:** Hibernate takes a **snapshot** of managed entities when they're loaded. At flush time (before commit), Hibernate compares the current state with the snapshot. If anything changed, it automatically generates and executes the `UPDATE` SQL — without you calling `save()`. This only works for **managed entities** (inside a `@Transactional` method). After the transaction ends, entities are detached and changes are no longer tracked.
 
@@ -3152,11 +3146,10 @@ new Object()          save()/persist()          transaction ends
 
 ### 8.5 Queries
 
----
-
-**Q12: What's the difference between JPQL and native SQL queries in Spring Data JPA?**
+#### Q12: What's the difference between JPQL and native SQL queries in Spring Data JPA?
 
 **A:**
+
 | | JPQL | Native SQL |
 |---|---|---|
 | Syntax | Entity/field names | Table/column names |
@@ -3165,17 +3158,14 @@ new Object()          save()/persist()          transaction ends
 | Complex queries | Limited | Full SQL power |
 | Use for | Standard queries | Window functions, CTEs, specific DB features |
 
----
-
-**Q13: How do projections improve performance?**
+#### Q13: How do projections improve performance?
 
 **A:** When you return a full entity, Hibernate loads all columns from the table. If you only need 3 out of 30 columns, you're wasting 90% of the data transfer. **Interface projections** and **DTO projections** let you define exactly which fields to fetch. Spring Data JPA generates `SELECT id, first_name, email FROM users` instead of `SELECT *`. This reduces: data transfer, memory usage, and deserialization time. For read-heavy endpoints, this can be a 3-10x performance improvement.
 
----
-
-**Q14: What is the difference between `Page` and `Slice` in Spring Data JPA?**
+#### Q14: What is the difference between `Page` and `Slice` in Spring Data JPA?
 
 **A:**
+
 - `Page<T>`: Executes TWO queries — one for the data and one for `COUNT(*)` to know the total records and pages. More expensive but gives you `totalElements` and `totalPages`.
 - `Slice<T>`: Executes ONE query — just fetches page+1 records to know if there's a next page. No total count. Use `Slice` for infinite scroll UIs where you don't need total count. Use `Page` for traditional pagination with page numbers.
 
@@ -3183,42 +3173,35 @@ new Object()          save()/persist()          transaction ends
 
 ### 8.6 Advanced
 
----
-
-**Q15: Explain the first-level and second-level cache in Hibernate.**
+#### Q15: Explain the first-level and second-level cache in Hibernate.
 
 **A:**
+
 - **First-level cache** (Session cache): Always on, scoped to a single `Session`/transaction. Every entity you load or save is stored here. Within the same transaction, fetching the same entity twice returns the same object without an extra SQL query. Cleared when the session closes.
 - **Second-level cache**: Shared across sessions/transactions. Stores entity data by ID. Needs explicit configuration (Ehcache, Caffeine, Redis). Annotate entities with `@Cache`. Great for frequently read, rarely changed data (countries, categories, etc.). Query cache is an extension that caches query results.
 
----
-
-**Q16: How do you handle `LazyInitializationException`?**
+#### Q16: How do you handle `LazyInitializationException`?
 
 **A:** This happens when you access a lazy-loaded relationship outside an open transaction (the session is closed). Solutions:
+
 1. **Best:** Load the data within the transaction using `JOIN FETCH` or `@EntityGraph`
 2. **Use DTO projection**: Don't pass entities outside the service layer
 3. **`@Transactional` on service method**: Keeps session open during the call
 4. **`spring.jpa.open-in-view=false`** (disable OSIV): Forces you to solve the problem properly at the design level
 5. **Avoid:** `FetchType.EAGER` — solves LazyInitException but creates N+1
 
----
-
-**Q17: How does the `Specification` pattern help with dynamic queries?**
+#### Q17: How does the `Specification` pattern help with dynamic queries?
 
 **A:** When you have multiple optional filters (name, status, date range, department), combining them with method-name queries leads to combinatorial explosion (2^n methods). The `Specification` pattern wraps each filter as a predicate and lets you compose them with `.and()`, `.or()`, `.not()`. You extend `JpaSpecificationExecutor` in the repository and build `Specification<T>` objects in the service. Only non-null predicates are applied, giving you clean, dynamic, composable SQL without if-else chains.
 
----
-
-**Q18: What is `@MappedSuperclass` and when do you use it?**
+#### Q18: What is `@MappedSuperclass` and when do you use it?
 
 **A:** `@MappedSuperclass` marks a class whose **mapped fields are inherited by entity subclasses** — but the class itself is not an entity and has no table. Used for sharing common fields across multiple entities (e.g., `id`, `createdAt`, `updatedAt`, `createdBy`). Unlike `@Inheritance`, there's no hierarchy table — each entity gets its own table with the inherited columns. The base auditing class pattern uses `@MappedSuperclass` with `@EntityListeners(AuditingEntityListener.class)`.
 
----
-
-**Q19: What are the `GenerationType` strategies and which should you use?**
+#### Q19: What are the `GenerationType` strategies and which should you use?
 
 **A:**
+
 - `IDENTITY`: DB auto-increment. Simple, works everywhere. **Disables Hibernate batch inserts** (DB generates ID after insert, so Hibernate can't batch them). Use for simple apps.
 - `SEQUENCE`: DB sequence object. Hibernate pre-allocates IDs in batches (`allocationSize`). **Best for performance and batch inserts**. Best for PostgreSQL/Oracle.
 - `UUID`: Generates random UUID. Good for microservices and distributed systems. Slightly larger index size.
@@ -3226,9 +3209,7 @@ new Object()          save()/persist()          transaction ends
 
 **Recommendation:** `SEQUENCE` for PostgreSQL apps needing performance; `IDENTITY` for simple MySQL apps; `UUID` for distributed systems.
 
----
-
-**Q20: How do you implement soft deletes with Spring Data JPA?**
+#### Q20: How do you implement soft deletes with Spring Data JPA?
 
 **A:** Instead of physically deleting records, add a `deletedAt` or `deleted` flag:
 
