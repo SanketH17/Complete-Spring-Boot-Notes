@@ -1833,7 +1833,7 @@ List<Employee> findAll();
 > - Use `JOIN FETCH` in JPQL when you're already writing a custom `@Query` and need full control over the join conditions
 > - Both solve the N+1 problem equally well — choose based on readability and convenience
 
-#### Solution 3: @BatchSize (Reduce N+1 to N/batch+1)
+### Solution 3: @BatchSize (Reduce N+1 to N/batch+1)
 
 `@BatchSize` doesn't eliminate extra queries entirely, but it **dramatically reduces them** by loading related entities in batches instead of one-by-one.
 
@@ -1890,7 +1890,7 @@ An **entity** is a Java object that represents a row in a database table.
 
 JPA entities can be in four states. The state tells us whether JPA is tracking the object and whether changes can be saved automatically.
 
-#### 6.2.1 The Four States
+### 6.2.1 The Four States
 
 | State | Simple meaning | Example |
 |---|---|---|
@@ -1915,9 +1915,9 @@ Transient --persist/save--> Managed --remove/delete--> Removed
 
 > **Remember:** Managed = tracked. Detached = not tracked.
 
-#### 6.2.3 Example of Each State
+### 6.2.3 Example of Each State
 
-##### A. Transient — just a Java object
+### A. Transient — just a Java object
 
 ```java
 User user = new User();
@@ -1926,7 +1926,7 @@ user.setEmail("alice@example.com");
 
 JPA is not tracking this object, so creating or changing it does not save anything to the database.
 
-##### B. Managed — JPA tracks changes
+#### B. Managed — JPA tracks changes
 
 ```java
 @Transactional
@@ -1938,7 +1938,7 @@ public void updateEmail(Long id) {
 
 The entity is managed inside the transaction. When the method finishes successfully, Hibernate detects the change and updates the database. This is called **dirty checking**; you do not need to call `save()` for this change.
 
-##### C. Detached — changes are not tracked
+#### C. Detached — changes are not tracked
 
 ```java
 User user = userRepository.findById(1L).orElseThrow();
@@ -1959,7 +1959,7 @@ public User updateDetachedUser(User user) {
 
 Spring Data JPA uses `merge` when it needs to copy changes from an existing detached entity into a managed entity. The returned object may be a different Java object from the one passed in.
 
-##### D. Removed — marked for deletion
+#### D. Removed — marked for deletion
 
 ```java
 @Transactional
@@ -1971,7 +1971,7 @@ public void deleteUser(Long id) {
 
 The entity is marked for deletion. The SQL `DELETE` is executed as the transaction is flushed or committed.
 
-#### 6.2.4 What Is `LazyInitializationException`?
+### 6.2.4 What Is `LazyInitializationException`?
 
 A relationship may be **lazy-loaded**, meaning JPA fetches its data only when you first access it.
 
@@ -1979,14 +1979,14 @@ If you access that relationship after the entity's persistence context has close
 
 **Simple fix:** Load the required relationship while the transaction is active, for example with `JOIN FETCH` or `@EntityGraph`.
 
-#### 6.2.5 Common Mistakes
+### 6.2.5 Common Mistakes
 
 - **Changing a detached entity:** the change is not automatically saved. Save/merge it in a transaction, or load it again inside a transaction and update it there.
 - **Assuming `save()` always returns the same object:** for an existing detached entity, `save()` may return a different managed object. Use the returned value when needed.
 - **Accessing lazy data too late:** fetch the data before the persistence context closes.
 - **Calling `save()` for every managed change:** inside a transaction, changes to a managed entity are detected automatically at commit.
 
-#### 6.2.6 Interview Answer
+### 6.2.6 Interview Answer
 
 “JPA entities have four states: transient, managed, detached, and removed. A transient object is not tracked by JPA. A managed entity is tracked, so its changes can be saved automatically when the transaction commits. A detached entity is no longer tracked, so its changes are not saved automatically. A removed entity is marked for deletion.”
 
@@ -2000,7 +2000,7 @@ If you access that relationship after the entity's persistence context has close
 
 Think of it like auto-save in a document: change the value, and Hibernate detects the change.
 
-#### 6.3.2 How It Works
+### 6.3.2 How It Works
 
 1. Load an entity inside a `@Transactional` method.
 2. Hibernate tracks the entity and remembers its original values.
@@ -2026,7 +2026,7 @@ public class UserService {
 
 **What happens:** The user is loaded and tracked in the transaction. When the transaction commits, Hibernate detects the changed email and updates the database.
 
-#### 6.3.4 When Dirty Checking Does Not Work
+### 6.3.4 When Dirty Checking Does Not Work
 
 Dirty checking does not automatically save changes to an entity that is **detached** (no longer tracked by Hibernate).
 
@@ -2042,7 +2042,7 @@ public void updateEmail(Long userId) {
 
 **Fix:** Make the update inside a service method annotated with `@Transactional`, as shown in the previous example.
 
-#### 6.3.5 Important Points
+### 6.3.5 Important Points
 
 - **Managed entity:** Hibernate tracks it; changes can be saved automatically.
 - **Detached entity:** Hibernate no longer tracks it; changes are not automatically saved.
@@ -2059,7 +2059,7 @@ public class User {
 }
 ```
 
-#### 6.3.6 Interview Answer
+### 6.3.6 Interview Answer
 
 “Dirty checking is a Hibernate feature that detects changes to managed entities and updates the database automatically when changes are flushed. If the entity is managed inside a `@Transactional` method, I usually don't need to call `save()` after changing its fields.”
 
@@ -2067,7 +2067,7 @@ public class User {
 
 ### 6.4 JPA Transactions (`@Transactional`)
 
-#### 6.4.1 What is a transaction?
+### 6.4.1 What is a transaction?
 
 A **transaction** is a group of database operations that should **all succeed or all fail together**. 🎯
 
@@ -2081,7 +2081,7 @@ If step 2 fails, step 1 should **also be undone**.
 - ✅ **Commit:** Keep the database changes.
 - ↩️ **Rollback:** Undo the database changes made by the transaction.
 
-#### 6.4.2 ACID properties
+### 6.4.2 ACID properties
 
 ACID describes four important rules that help database transactions stay reliable.
 
@@ -2094,7 +2094,7 @@ ACID describes four important rules that help database transactions stay reliabl
 
 > 🎯 **Interview tip:** **Atomicity** = all or nothing; **Consistency** = valid data; **Isolation** = safe concurrent work; **Durability** = committed data stays saved.
 
-#### 6.4.3 Spring transaction management and `@Transactional`
+### 6.4.3 Spring transaction management and `@Transactional`
 
 Spring transaction management handles starting, committing, and rolling back database transactions for us.
 
@@ -2128,7 +2128,7 @@ public class BankService {
 }
 ```
 
-##### Simple explanation
+#### Simple explanation
 
 `@Transactional` ensures both account updates happen as one transaction.
 
@@ -2151,7 +2151,7 @@ With Spring's usual proxy-based setup:
 
 Keep related database changes inside one service method when they must succeed or fail together. ⚠️ A database rollback **cannot automatically undo an external action**, such as an email or a payment already sent to another system.
 
-#### 6.4.5 Rollback rules
+### 6.4.5 Rollback rules
 
 Rollback means **undoing database changes**.
 
@@ -2181,13 +2181,13 @@ Here, Spring rolls back the database changes if the exception escapes the method
 > - `rollbackFor` → rollback for the **specified** exception.
 > - ⚠️ If you **catch** an exception and **do not rethrow** it, Spring may **commit** the changes.
 
-#### 6.4.6 Transaction Propagation
+### 6.4.6 Transaction Propagation
 
 **Propagation** decides what happens when a transactional method calls another method that also uses `@Transactional`.
 
 There are 7 types, but the most important ones are `REQUIRED` and `REQUIRES_NEW`.
 
-##### 1. Types of propagation
+### 1. Types of propagation
 
 | Type                 | Easiest meaning                                                      |
 | -------------------- | -------------------------------------------------------------------- |
@@ -2246,7 +2246,7 @@ For most normal service methods, start with `REQUIRED`. Use `REQUIRES_NEW` when 
 
 > 🎯 **Interview answer:** `REQUIRES_NEW` is a Spring transaction propagation type that **always starts a new transaction**. If a transaction is already active, Spring **suspends** it temporarily. The new transaction commits or rolls back independently of the suspended transaction.
 
-#### 6.4.7 Isolation Levels in Spring Boot
+### 6.4.7 Isolation Levels in Spring Boot
 
 **Isolation** controls what one transaction can see while other transactions are running at the same time.
 
@@ -2265,7 +2265,7 @@ Isolation levels control what each employee can see while the other is making ch
 
 The database decides whether Employee B can see A's uncommitted changes, and whether B sees different data when reading again.
 
-##### 2. Types of isolation levels
+### 2. Types of isolation levels
 
 | Level              | Easiest meaning                                                          |
 | ------------------ | ------------------------------------------------------------------------ |
@@ -2329,7 +2329,7 @@ Here, `READ_COMMITTED` tells Spring to use that isolation level for the transact
 > - `DEFAULT` uses the **database's configured default**.
 > - Exact behavior depends on the database, and isolation settings generally take effect when a new transaction starts.
 
-#### 6.4.8 Read-only transactions
+### 6.4.8 Read-only transactions
 
 **`readOnly = true`** means: “This method is only supposed to read data, not change it.”
 
@@ -2366,7 +2366,7 @@ Use it for methods that only fetch data, such as `getUsers()` or `getUserById()`
 
 > 💡 **Easy rule:** Reading data → `readOnly = true`. Changing data → use a normal `@Transactional` method when a transaction is needed.
 
-#### 6.4.9 Proxy-based transaction management and self-invocation
+### 6.4.9 Proxy-based transaction management and self-invocation
 
 Spring usually applies `@Transactional` using a **proxy** 🎭. A proxy is a Spring-created wrapper that intercepts a method call and applies transaction behavior.
 
@@ -2417,7 +2417,7 @@ Here, calling `generateReport()` does **not** activate a new transaction just be
 
 ### 6.5 JPA Locking: Optimistic vs Pessimistic
 
-#### 6.5.1 What is locking?
+### 6.5.1 What is locking?
 
 Locking helps prevent problems when **two users change the same database record at the same time**.
 
@@ -2428,7 +2428,7 @@ There are two common approaches:
 - **Optimistic locking:** Let users work, then check for a conflict when saving.
 - **Pessimistic locking:** Lock the database row while it is being changed, so competing updates must wait.
 
-#### 6.5.2 Optimistic Locking
+### 6.5.2 Optimistic Locking
 
 **Idea:** Assume conflicts are rare. Check whether someone else changed the record before saving.
 
@@ -2464,7 +2464,7 @@ When a conflict happens, the application can ask the user to refresh and try aga
 
 **Use it when:** Conflicts are uncommon. It is a good starting choice for most applications.
 
-#### 6.5.3 Pessimistic Locking
+### 6.5.3 Pessimistic Locking
 
 **Idea:** Lock the database row before changing it. Other transactions trying to make conflicting changes must wait until the lock is released.
 
@@ -2508,7 +2508,7 @@ The row stays locked during the transaction. When the transaction finishes, the 
 
 **Remember:** `PESSIMISTIC_WRITE` is used when you need to protect a row from competing updates. Exact behavior for other reads depends on the database.
 
-#### 6.5.4 Quick Comparison
+### 6.5.4 Quick Comparison
 
 | | Optimistic locking | Pessimistic locking |
 |---|---|---|
@@ -2518,7 +2518,7 @@ The row stays locked during the transaction. When the transaction finishes, the 
 | Main downside | May need a retry | Can cause waiting or deadlocks |
 | How to use it | Add `@Version` | Use `@Lock(LockModeType.PESSIMISTIC_WRITE)` |
 
-#### 6.5.5 Important points
+### 6.5.5 Important points
 
 - Start with **optimistic locking** for most cases.
 - Use **pessimistic locking** only where competing updates are common or must be carefully controlled.
@@ -2534,7 +2534,7 @@ The row stays locked during the transaction. When the transaction finishes, the 
 
 ### 6.6 Caching in JPA and Spring Boot
 
-#### 6.6.1 What Is Caching?
+### 6.6.1 What Is Caching?
 
 **Caching means keeping frequently used data in memory so the application can return it faster instead of querying the database every time.**
 
@@ -2558,7 +2558,7 @@ Cache data that is read often and does not change too frequently. Remember that 
 | **Second-level cache** | Shared across persistence contexts | Yes | Reuses cached entities across transactions |
 | **Spring cache** | At the method/service level | Enable caching and choose a cache provider | Stores the result of a method call |
 
-#### 6.6.3 First-Level Cache
+### 6.6.3 First-Level Cache
 
 Hibernate provides this cache automatically. It works inside the current persistence context, usually during a transaction.
 
@@ -2578,7 +2578,7 @@ public void checkCache() {
 
 ---
 
-#### 6.6.4 Second-Level Cache
+### 6.6.4 Second-Level Cache
 
 The second-level cache is optional. It can share cached entities between different persistence contexts. You must configure a supported cache provider and mark the entities you want to cache.
 
@@ -2590,7 +2590,7 @@ Use it for data that is read often and changes rarely, such as categories or ref
 
 ---
 
-#### 6.6.5 Spring Boot Cache — Most Useful to Know
+### 6.6.5 Spring Boot Cache — Most Useful to Know
 
 Spring caching can store the result of a method, such as a service method that fetches roles or categories.
 
@@ -2620,7 +2620,7 @@ public class MyApplication {
 | `@CachePut` | Always run the method, then update the cache with its result | Save/update methods |
 | `@CacheEvict` | Remove data from the cache | Delete or invalidate cached data |
 
-##### Example: `@Cacheable`
+#### Example: `@Cacheable`
 
 ```java
 @Service
@@ -2639,7 +2639,7 @@ public class RoleService {
 2. Next call for `ADMIN`: Spring returns the cached result, so the method is skipped.
 3. A call for `USER` uses a different cache key and runs separately.
 
-##### Example: Update and remove cached data
+#### Example: Update and remove cached data
 
 ```java
 @CachePut(value = "roles", key = "#role.name")
@@ -2662,7 +2662,7 @@ public void deleteRole(String name) {
 
 ---
 
-#### 6.6.6 Cache Keys
+### 6.6.6 Cache Keys
 
 A **cache key** identifies a stored result.
 
@@ -2689,7 +2689,7 @@ Use stable values such as IDs or unique names as keys.
 
 ---
 
-#### 6.6.7 Cache Expiry (TTL)
+### 6.6.7 Cache Expiry (TTL)
 
 **TTL (Time To Live)** is how long cached data remains **valid** before it **expires**.
 
